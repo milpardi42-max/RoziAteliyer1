@@ -25,11 +25,33 @@ export async function generateStaticParams() {
   return LOCALES.flatMap((locale) => site.portfolios.map((p) => ({ locale, slug: p.slug })));
 }
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const site = await getSite();
   const p = site.portfolios.find((x) => x.slug === slug);
-  return p ? { title: t(p.title, locale), description: t(p.intro, locale) } : {};
+  if (!p) return {};
+  const title = t(p.title, locale);
+  const description = t(p.intro, locale);
+  const url = `https://rosieatelier.com/${locale}/portfolio/${slug}`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "article",
+      images: [{ url: p.cover, width: 1200, height: 800, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [p.cover],
+    },
+  };
 }
 
 export default async function PortfolioDetail({ params }: Props) {
@@ -51,15 +73,40 @@ export default async function PortfolioDetail({ params }: Props) {
     { label: t(p.title, locale) },
   ];
 
+  // JSON-LD structured data (CreativeWork / Article)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: t(p.title, locale),
+    description: t(p.intro, locale),
+    image: p.cover,
+    dateCreated: String(p.year),
+    locationCreated: { "@type": "Place", name: t(p.location, locale) },
+    ...(p.artist ? {
+      author: {
+        "@type": "Person",
+        name: t(p.artist.name, locale),
+        url: `https://rosieatelier.com/${locale}/artists/${p.artist.slug}`,
+      },
+    } : {}),
+    url: `https://rosieatelier.com/${locale}/portfolio/${slug}`,
+  };
+
   return (
     <article>
+      {/* JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <ScrollProgress />
 
       {/* Project hero */}
       <section className="relative isolate h-[92svh] min-h-[560px] overflow-hidden bg-[#0d1117] text-white">
         <Image src={p.cover} alt={t(p.title, locale)} fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0d13]/95 via-[#0a0d13]/30 to-[#0a0d13]/30" />
-        <div className="container-x relative flex h-full flex-col justify-end pb-12 pt-[var(--header-h)]">
+        <div className="container-x relative flex h-full flex-col justify-end pb-12 pt-[calc(var(--announce-h,0px)+var(--header-h))]">
           <Breadcrumb items={breadcrumb} locale={locale} className="mb-6 text-white/60 [&_a]:text-white/60 [&_a:hover]:text-white [&_.text-foreground]:text-white [&_.text-foreground-secondary]:text-white/60 [&_.text-border]:text-white/25" />
           <p className="anim-blur-in text-label text-white/70">{p.category ? t(p.category.name, locale) : ""} · {yr}</p>
           <h1 className="anim-blur-in mt-4 max-w-4xl font-display text-display text-balance" style={{ animationDelay: "100ms" }}>{t(p.title, locale)}</h1>
@@ -67,7 +114,7 @@ export default async function PortfolioDetail({ params }: Props) {
         </div>
       </section>
 
-      {/* Intro + meta */}
+      {/* Intro + meta sidebar */}
       <section className="container-x section-y">
         <div className="grid gap-10 lg:grid-cols-12">
           <Reveal className="lg:col-span-7">
@@ -90,6 +137,7 @@ export default async function PortfolioDetail({ params }: Props) {
                           <span className="block font-medium group-hover:text-accent">{t(p.artist.name, locale)}</span>
                           <span className="block text-caption text-foreground-secondary">{t(p.artist.profession, locale)}</span>
                         </span>
+                        <ArrowUpRight className="h-4 w-4 ms-auto text-muted group-hover:text-accent rtl-flip" />
                       </Link>
                     </dd>
                   </div>
@@ -133,7 +181,9 @@ export default async function PortfolioDetail({ params }: Props) {
           if (b.type === "quote" && b.text)
             return (
               <Reveal key={i} className="container-x">
-                <blockquote className="mx-auto max-w-3xl text-center font-display text-h1 italic text-balance">&quot;{t(b.text, locale)}&quot;</blockquote>
+                <blockquote className="mx-auto max-w-3xl border-s-4 border-accent py-2 ps-8 font-display text-h2 italic text-balance text-foreground">
+                  &ldquo;{t(b.text, locale)}&rdquo;
+                </blockquote>
               </Reveal>
             );
           return (

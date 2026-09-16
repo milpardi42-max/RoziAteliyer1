@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { findUserByEmail, verifyPassword, type PublicUser } from "./data/users";
+import { getContent } from "./data/store";
 import { SESSION_COOKIE, type SessionUser, readSessionToken } from "./session";
 
 export { SESSION_COOKIE, createSessionToken, readSessionToken } from "./session";
@@ -26,6 +27,19 @@ function timingSafeEqualStr(a: string, b: string): boolean {
 
 export function adminConfigured(): boolean {
   return Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD);
+}
+
+/**
+ * Returns true if the given session belongs to the site owner (راضیه خیری‌پور).
+ * Ownership is determined by matching OWNER_EMAIL env var (case-insensitive).
+ * Admins are also treated as owners so the admin panel retains full access.
+ */
+export function isOwner(user: SessionUser | null): boolean {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  const ownerEmail = process.env.OWNER_EMAIL?.trim().toLowerCase();
+  if (!ownerEmail) return false;
+  return user.email.toLowerCase() === ownerEmail;
 }
 
 /**
@@ -64,12 +78,23 @@ export async function verifyCredentials(
     const match = await verifyPassword(password, stored.passwordHash);
     if (!match) return { ok: false, error: "invalid_credentials" };
 
+    let resolvedArtistId: string | undefined;
+    if (stored.role === "artist" && stored.artistId) {
+      const content = await getContent();
+      // Only use the stored artistId if the record still exists
+      if (content.artists.some((a) => a.id === stored.artistId)) {
+        resolvedArtistId = stored.artistId;
+      }
+      // Note: no fallback to artists[0] — if the record was deleted, the session
+      // simply won't carry an artistId (the user would need to be re-linked by admin).
+    }
+
     const user: SessionUser = {
       id: stored.id,
       name: stored.name,
       email: stored.email,
       role: stored.role,
-      ...(stored.artistId ? { artistId: stored.artistId } : {}),
+      ...(resolvedArtistId ? { artistId: resolvedArtistId } : {}),
     };
     return { ok: true, user };
   } catch {

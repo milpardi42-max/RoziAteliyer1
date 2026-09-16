@@ -13,6 +13,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: L
   const { locale } = await params;
   return { title: dictionaries[locale].nav.search };
 }
+export const dynamic = "force-dynamic";
+
 export default async function SearchPage({ params, searchParams }: { params: Promise<{ locale: Locale }>; searchParams: Promise<{ q?: string }> }) {
   const [{ locale }, { q = "" }] = await Promise.all([params, searchParams]);
   const site = await getSite();

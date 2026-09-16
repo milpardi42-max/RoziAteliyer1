@@ -7,6 +7,8 @@ import { dictionaries } from "@/lib/i18n/dictionary";
 import type { Locale } from "@/lib/i18n/types";
 import { faNum, href } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: Locale }> }): Promise<Metadata> {
   const { locale } = await params;
   return { title: dictionaries[locale].nav.about };
@@ -36,7 +38,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
       />
       <section className="container-x section-y grid gap-12 lg:grid-cols-12">
         <div className="prose-ra lg:col-span-7">
-          <p>{fa ? "رزی آتلیه در سال ۱۴۰۲ با یک ایده‌ی ساده شروع شد: الگوهای خوب باید راهی مستقیم به دیوارها، پارچه‌ها و اشیای زندگی روزمره داشته باشند؛ و طراحان‌شان باید دیده و منصفانه پرداخت شوند." : "Rosie Atelier began in 2023 with a simple idea: good patterns deserve a direct path to walls, textiles and everyday objects — and their designers deserve to be seen and paid fairly."}</p>
+          <p>{fa ? "رزی آتلیه در سال ۱۴۰۲ توسط راضیه خیری‌پور با یک ایده‌ی ساده شروع شد: الگوهای خوب باید راهی مستقیم به دیوارها، پارچه‌ها و اشیای زندگی روزمره داشته باشند؛ و طراحان‌شان باید دیده و منصفانه پرداخت شوند." : "Rosie Atelier was founded in 2023 by Razieh Kheiripour with a simple idea: good patterns deserve a direct path to walls, textiles and everyday objects — and their designers deserve to be seen and paid fairly."}</p>
           <p>{fa ? "امروز رزی آتلیه یک مارکت‌پلیس الگو، یک فروشگاه محصولات اختصاصی، یک گالری پورتفولیو و یک آکادمی است؛ همه در یک اکوسیستم." : "Today Rosie Atelier is a pattern marketplace, an exclusive product store, a portfolio gallery and an academy — all in one ecosystem."}</p>
         </div>
         <dl className="grid grid-cols-2 gap-4 lg:col-span-5">

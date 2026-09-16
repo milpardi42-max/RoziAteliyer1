@@ -16,6 +16,8 @@ export async function generateStaticParams() {
   const site = await getSite();
   return LOCALES.flatMap((locale) => site.stories.map((story) => ({ locale, slug: story.slug })));
 }
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const site = await getSite();
@@ -40,7 +42,7 @@ export default async function StoryPage({ params }: Props) {
       <section className="relative isolate h-[80svh] min-h-[520px] overflow-hidden bg-[#0d1117] text-white">
         <Image src={s.image} alt="" fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0d13]/95 via-[#0a0d13]/40 to-[#0a0d13]/30" />
-        <div className="container-x relative flex h-full flex-col justify-end pb-12 pt-[var(--header-h)]">
+        <div className="container-x relative flex h-full flex-col justify-end pb-12 pt-[calc(var(--announce-h,0px)+var(--header-h))]">
           <Breadcrumb items={breadcrumb} locale={locale} className="mb-6 text-white/60 [&_a]:text-white/60 [&_a:hover]:text-white [&_.text-foreground]:text-white [&_.text-foreground-secondary]:text-white/60 [&_.text-border]:text-white/25" />
           <p className="anim-blur-in text-label text-white/70">{d.nav.stories}</p>
           <h1 className="anim-blur-in mt-4 max-w-4xl font-display text-display text-balance" style={{ animationDelay: "100ms" }}>{t(s.title, locale)}</h1>

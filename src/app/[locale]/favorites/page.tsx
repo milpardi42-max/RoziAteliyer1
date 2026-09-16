@@ -9,6 +9,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: L
   const { locale } = await params;
   return { title: dictionaries[locale].common.favorite };
 }
+export const dynamic = "force-dynamic";
+
 export default async function FavoritesPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   const site = await getSite();

@@ -38,9 +38,9 @@ export function Select({ className, children, ...props }: React.SelectHTMLAttrib
   );
 }
 
-export function Field({ label, htmlFor, children, hint }: { label: string; htmlFor?: string; children: React.ReactNode; hint?: string }) {
+export function Field({ label, htmlFor, children, hint, className }: { label: string; htmlFor?: string; children: React.ReactNode; hint?: string; className?: string }) {
   return (
-    <label htmlFor={htmlFor} className="block">
+    <label htmlFor={htmlFor} className={cn("block", className)}>
       <span className="mb-1.5 block text-caption font-medium text-foreground-secondary">{label}</span>
       {children}
       {hint && <span className="mt-1 block text-caption text-muted">{hint}</span>}

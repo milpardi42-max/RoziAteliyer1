@@ -15,6 +15,22 @@ export function patternById(site: SiteContent, id: string) {
 export function productById(site: SiteContent, id: string) {
   return site.products.find((p) => p.id === id) ?? null;
 }
+
+const ACADEMY_HOST: Artist = {
+  id: "artist-razieh-khairipour",
+  slug: "razieh-khairipour",
+  name: { fa: "راضیه خیری پور", en: "Razieh Khairipour" },
+  profession: { fa: "مدرس و میزبان آکادمی", en: "Academy instructor and host" },
+  bio: { fa: "مدرس و میزبان ورکشاپ‌ها و وبینارهای آکادمی رزی.", en: "Instructor and host of Rosie Academy workshops and webinars." },
+  avatar: "/images/education/e01.jpg",
+  cover: "/images/education/e01.jpg",
+  location: { fa: "تهران", en: "Tehran" },
+  social: {},
+  featured: false,
+  followers: 0,
+  rating: 5,
+  reviewsCount: 0,
+};
 export function portfolioById(site: SiteContent, id: string) {
   return site.portfolios.find((p) => p.id === id) ?? null;
 }
@@ -35,9 +51,12 @@ export function enrichPortfolio(site: SiteContent, p: Portfolio) {
   };
 }
 export function enrichEducation(site: SiteContent, e: EducationItem) {
+  const author = e.type === "workshop" || e.type === "webinar"
+    ? site.artists.find((artist) => artist.id === "artist-razieh-khairipour") ?? ACADEMY_HOST
+    : artistOf(site, e.authorId);
   return {
     ...e,
-    author: artistOf(site, e.authorId),
+    author,
     category: categoryOf(site, e.categoryId),
     patterns: e.patternIds.map((id) => patternById(site, id)).filter(Boolean) as Pattern[],
     products: e.productIds.map((id) => productById(site, id)).filter(Boolean) as Product[],

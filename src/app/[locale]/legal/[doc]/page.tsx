@@ -14,6 +14,8 @@ export function generateStaticParams() {
   return LOCALES.flatMap((locale) => docs.map((doc) => ({ locale, doc })));
 }
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, doc } = await params;
   const d = dictionaries[locale];

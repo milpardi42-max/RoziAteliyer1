@@ -2,14 +2,18 @@ import type { Metadata } from "next";
 import "../globals.css";
 import { notFound } from "next/navigation";
 import { AppProviders } from "@/components/providers/AppProviders";
+import { Fragment } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/layout/CartDrawer";
 import { SearchPalette } from "@/components/layout/SearchPalette";
-import { PageTransition } from "@/components/layout/PageTransition";
+import { LocaleChrome } from "@/components/layout/LocaleChrome";
+import { AnnouncementBarServer } from "@/components/layout/AnnouncementBarServer";
 import { getNavData } from "@/lib/data/nav";
 import { LOCALES, dirOf, type Locale } from "@/lib/i18n/types";
 import { dictionaries } from "@/lib/i18n/dictionary";
+
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -66,14 +70,20 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       </head>
       <body className="min-h-dvh flex flex-col">
         <AppProviders locale={locale}>
-          <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100] focus:rounded-md focus:bg-foreground focus:px-4 focus:py-2 focus:text-background">Skip to content</a>
-          <Header nav={nav} />
-          <main id="main" className="flex-1">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
-          <CartDrawer />
-          <SearchPalette />
+          <LocaleChrome
+            before={
+              <Fragment key="before">
+                <a key="skip-link" href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[100] focus:rounded-md focus:bg-foreground focus:px-4 focus:py-2 focus:text-background">Skip to content</a>
+                <AnnouncementBarServer key="announcement" />
+                <Header key="header" nav={nav} />
+                <CartDrawer key="cart-drawer" />
+                <SearchPalette key="search-palette" />
+              </Fragment>
+            }
+            after={<Footer key="footer" />}
+          >
+            {children}
+          </LocaleChrome>
         </AppProviders>
       </body>
     </html>

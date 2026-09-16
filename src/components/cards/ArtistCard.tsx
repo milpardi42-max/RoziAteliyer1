@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, UserPlus, Check } from "lucide-react";
+import { ArrowUpRight, Star, UserPlus, Check } from "lucide-react";
 import { useState } from "react";
 import { useLocale } from "@/components/providers/AppProviders";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
@@ -32,6 +32,15 @@ export function ArtistCard({ artist, variant = "default", className }: { artist:
           className="img-zoom object-cover"
         />
         <div className="absolute inset-0 vignette opacity-70" />
+        {/* Rating badge — top right */}
+        {artist.rating > 0 && (
+          <div className="absolute inset-inline-end-3 top-3 flex items-center gap-1 rounded-full glass px-2.5 py-1 text-[12px] font-semibold text-white">
+            <Star className="h-3 w-3 fill-white text-white" />
+            {locale === "fa"
+              ? String(artist.rating).replace(".", "٫")
+              : artist.rating.toFixed(1)}
+          </div>
+        )}
         <div className="absolute bottom-3 inset-inline-start-3 flex gap-1.5">
           {(artist.portfolioPreview.length ? artist.portfolioPreview : [artist.featuredPattern?.image].filter(Boolean) as string[]).slice(0, 3).map((src) => (
             <span key={src} className="relative h-10 w-10 overflow-hidden rounded-sm ring-1 ring-white/50 sm:h-12 sm:w-12">

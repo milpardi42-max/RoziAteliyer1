@@ -21,6 +21,63 @@ import { cn, faNum, href, t } from "@/lib/utils";
 import type { Artist, Category, Space, Story } from "@/lib/types";
 
 /* ------------------------------------------------------------------ */
+/** Decorative SVG icon per product type — used in CategoriesSection */
+const CategoryIcons: Record<string, React.ReactNode> = {
+  wallpaper: (
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7">
+      <rect x="4" y="4" width="18" height="18" rx="2" />
+      <rect x="26" y="4" width="18" height="18" rx="2" />
+      <rect x="4" y="26" width="18" height="18" rx="2" />
+      <rect x="26" y="26" width="18" height="18" rx="2" />
+    </svg>
+  ),
+  fabric: (
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7">
+      <path d="M8 8 Q24 18 40 8" /><path d="M8 18 Q24 28 40 18" />
+      <path d="M8 28 Q24 38 40 28" /><path d="M8 38 Q24 48 40 38" />
+    </svg>
+  ),
+  curtain: (
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7">
+      <line x1="4" y1="6" x2="44" y2="6" /><line x1="10" y1="6" x2="10" y2="42" />
+      <line x1="38" y1="6" x2="38" y2="42" />
+      <path d="M10 42 Q24 36 38 42" />
+    </svg>
+  ),
+  decor: (
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7">
+      <circle cx="24" cy="24" r="10" /><circle cx="24" cy="24" r="18" strokeDasharray="3 4" />
+      <line x1="24" y1="6" x2="24" y2="14" /><line x1="24" y1="34" x2="24" y2="42" />
+      <line x1="6" y1="24" x2="14" y2="24" /><line x1="34" y1="24" x2="42" y2="24" />
+    </svg>
+  ),
+  pattern: (
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7">
+      <path d="M12 12 L36 36 M36 12 L12 36" />
+      <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" />
+      <circle cx="36" cy="12" r="3" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="36" r="3" fill="currentColor" stroke="none" />
+      <circle cx="36" cy="36" r="3" fill="currentColor" stroke="none" />
+      <circle cx="24" cy="24" r="4" />
+    </svg>
+  ),
+  default: (
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7">
+      <path d="M24 4 L44 14 L44 34 L24 44 L4 34 L4 14 Z" />
+      <path d="M24 4 L24 44 M4 14 L44 14 M4 34 L44 34" />
+    </svg>
+  ),
+};
+
+function getCategoryIcon(slug: string): React.ReactNode {
+  const key = slug.toLowerCase();
+  for (const [k, icon] of Object.entries(CategoryIcons)) {
+    if (key.includes(k)) return icon;
+  }
+  return CategoryIcons.default;
+}
+
+/* ------------------------------------------------------------------ */
 export function DiscoverySection({ patterns, categories }: { patterns: PatternCardData[]; categories: Category[] }) {
   const { locale, dict } = useLocale();
   if (!patterns.length) return null;
@@ -40,16 +97,95 @@ export function DiscoverySection({ patterns, categories }: { patterns: PatternCa
           ))}
         </div>
       </div>
-      <Reveal className="mt-8 flex flex-wrap gap-2">
-        {categories.slice(0, 8).map((c) => (
-          <Link key={c.id} href={href(locale, `/patterns?category=${c.slug}`)} className="rounded-full border border-border px-4 py-2 text-sm text-foreground-secondary transition-colors hover:border-foreground hover:text-foreground">
-            {t(c.name, locale)}
-          </Link>
-        ))}
-      </Reveal>
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/**
+ * CategoriesSection — full centered grid of category cards.
+ * Each card shows the category image as background, a decorative SVG icon,
+ * and the category name. Used on the home page between Discovery and trending.
+ */
+export function CategoriesSection({ categories }: { categories: Category[] }) {
+  const { locale, dict } = useLocale();
+  const cats = categories.slice(0, 6);
+  if (!cats.length) return null;
+
+  return (
+    <section className="bg-background-secondary">
+      <div className="container-x section-y">
+        <Reveal>
+          <div className="text-center">
+            <p className="text-label text-accent mb-3">
+              {locale === "fa" ? "دسته‌بندی‌ها" : "Categories"}
+            </p>
+            <h2 className="font-display text-h1 text-balance">
+              {locale === "fa" ? "سبک خود را انتخاب کنید" : "Explore by Category"}
+            </h2>
+            <p className="mx-auto mt-3 max-w-lg text-body-lg text-foreground-secondary">
+              {locale === "fa"
+                ? "از میان طیف گسترده‌ای از سبک‌ها و دسته‌بندی‌ها، طرح مورد نظر خود را بیابید"
+                : "Discover patterns across a wide range of styles and product categories"}
+            </p>
+          </div>
+        </Reveal>
+
+        <Reveal className="mt-10">
+          {/* 2 cols on mobile → 3 on sm → 6 on lg: all 6 in one row on desktop */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {cats.map((c, i) => (
+              <Reveal key={c.id} delay={i * 55}>
+                <Link
+                  href={href(locale, `/patterns?category=${c.slug}`)}
+                  className="group relative flex flex-col items-center overflow-hidden rounded-2xl border border-border bg-surface transition-shadow duration-300 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  {/* image — square crop, compact */}
+                  <div className="relative w-full overflow-hidden" style={{ paddingBottom: "100%" }}>
+                    <Image
+                      src={c.image}
+                      alt={t(c.name, locale)}
+                      fill
+                      sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 17vw"
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.07]"
+                    />
+                    {/* subtle gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                    {/* decorative icon badge — centred on image */}
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm border border-white/30 text-white opacity-70 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110">
+                        {getCategoryIcon(c.slug)}
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* label */}
+                  <div className="w-full px-2 py-2.5 text-center">
+                    <p className="truncate font-semibold text-foreground text-xs leading-snug">
+                      {t(c.name, locale)}
+                    </p>
+                  </div>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </Reveal>
+
+        <Reveal className="mt-8 flex justify-center">
+          <Link
+            href={href(locale, "/styles")}
+            className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground-secondary transition-colors hover:border-foreground hover:text-foreground"
+          >
+            {dict.nav.viewAll}
+            <ArrowUpRight className="h-3.5 w-3.5 rtl-flip" />
+          </Link>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+
 
 /* ------------------------------------------------------------------ */
 export function PatternRail({ id, eyebrow, title, description, patterns, hrefPath, tone = "default" }: { id: string; eyebrow?: string; title: string; description?: string; patterns: PatternCardData[]; hrefPath: string; tone?: "default" | "secondary" }) {
@@ -121,24 +257,6 @@ export function NewArrivalsSection({ patterns, products }: { patterns: PatternCa
             ) : null,
           )}
         </Carousel>
-      </Reveal>
-      {/* category chips under the rail */}
-      <Reveal className="mt-8 flex flex-wrap gap-2">
-        {[
-          { label: locale === "fa" ? "کاغذدیواری" : "Wallpaper", path: "/shop?q=wallpaper" },
-          { label: locale === "fa" ? "طراحی پارچه" : "Fabric", path: "/shop?q=fabric" },
-          { label: locale === "fa" ? "پرده" : "Curtain", path: "/shop?q=curtain" },
-          { label: locale === "fa" ? "دکور" : "Décor", path: "/shop?q=decor" },
-          { label: locale === "fa" ? "الگو" : "Pattern", path: "/patterns?sort=new" },
-        ].map((c) => (
-          <Link
-            key={c.path}
-            href={href(locale, c.path)}
-            className="rounded-full border border-border px-4 py-2 text-sm text-foreground-secondary transition-colors hover:border-foreground hover:text-foreground"
-          >
-            {c.label}
-          </Link>
-        ))}
       </Reveal>
     </section>
   );
@@ -220,31 +338,33 @@ export function SpacesSection({ spaces }: { spaces: Space[] }) {
 }
 
 /* ------------------------------------------------------------------ */
-export function ExclusiveSection({ products }: { products: ProductCardData[] }) {
+export function ExclusiveSection({ products, heroImage }: { products: ProductCardData[]; heroImage: string }) {
   const { locale, dict } = useLocale();
-  const [lead, ...rest] = products;
-  if (!lead) return null;
+  if (!products.length) return null;
   return (
     <section className="relative overflow-hidden bg-[#0f141c] text-white">
       <div className="pointer-events-none absolute -top-40 end-[-10%] h-[520px] w-[520px] rounded-full bg-accent/20 blur-[140px]" />
       <div className="container-x section-y relative">
         <SectionHeader tone="inverse" eyebrow={dict.common.siteExclusive} title={dict.home.exclusiveTitle} description={dict.home.exclusiveDesc} href={href(locale, "/shop")} hrefLabel={dict.nav.viewAll} />
-        <div className="mt-10 grid gap-6 lg:grid-cols-12">
-          <Reveal className="lg:col-span-5">
-            <Link href={href(locale, `/shop/${lead.slug}`)} className="group relative block aspect-[4/5] overflow-hidden rounded-lg">
-              <Image src={lead.colors[0].image} alt={t(lead.title, locale)} fill sizes="(max-width:1024px) 100vw, 40vw" className="img-zoom object-cover" />
+        <div className="mt-10 grid gap-5 lg:grid-cols-2 lg:items-stretch">
+          {/* hero image — decorative, full height */}
+          <Reveal className="h-full lg:self-stretch">
+            <div className="relative h-full min-h-[420px] overflow-hidden rounded-xl lg:min-h-0">
+              <Image src={heroImage} alt={dict.home.exclusiveTitle} fill sizes="(max-width:1024px) 100vw, 50vw" className="img-zoom object-cover" />
               <div className="absolute inset-0 vignette" />
               <div className="absolute inset-x-0 bottom-0 p-6">
-                <p className="text-caption text-white/70" dir="ltr">{lead.sku}</p>
-                <h3 className="mt-1 font-display text-h2">{t(lead.title, locale)}</h3>
-                <p className="mt-2 line-clamp-2 max-w-md text-body-sm text-white/75">{t(lead.description, locale)}</p>
+                <h3 className="font-display text-h2">{dict.home.exclusiveTitle}</h3>
+                <p className="mt-2 line-clamp-2 max-w-md text-body-sm text-white/75">{dict.home.exclusiveDesc}</p>
               </div>
-            </Link>
+            </div>
           </Reveal>
-          <div className="grid gap-5 sm:grid-cols-2 lg:col-span-7 lg:grid-cols-3">
-            {rest.slice(0, 3).map((p, i) => (
-              <Reveal key={p.id} delay={i * 70} className="rounded-lg bg-white p-3 text-foreground dark:bg-surface">
-                <ProductCard product={p} />
+          {/* 4 product cards: 2 top + 2 bottom */}
+          <div className="grid grid-cols-2 gap-4">
+            {products.slice(0, 4).map((p, i) => (
+              <Reveal key={p.id} delay={i * 70}>
+                <div className="rounded-xl bg-white text-foreground dark:bg-surface overflow-hidden h-full">
+                  <ProductCard product={p} variant="compact" />
+                </div>
               </Reveal>
             ))}
           </div>

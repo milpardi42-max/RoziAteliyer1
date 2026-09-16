@@ -2,6 +2,7 @@ import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
+import { getContent, updateCollection } from "./store";
 
 /**
  * User store — same dual-backend pattern as the content store.
@@ -104,7 +105,7 @@ export async function getAllUsers(): Promise<StoredUser[]> {
   }
 }
 
-async function saveAllUsers(users: StoredUser[]): Promise<void> {
+export async function saveAllUsers(users: StoredUser[]): Promise<void> {
   if (redisEnabled()) {
     await redisCmd(["SET", USER_KEY, JSON.stringify(users)]);
   } else {
@@ -122,34 +123,130 @@ export async function findUserById(id: string): Promise<StoredUser | null> {
   return users.find((u) => u.id === id) ?? null;
 }
 
+export interface ArtistSignupExtra {
+  phone?: string;
+  city?: string;
+  specialty?: string;
+  instagram?: string;
+  portfolioUrl?: string;
+}
+
 export async function createUser(
   name: string,
   email: string,
   password: string,
   role: UserRole = "user",
   artistId?: string,
+  signupExtra?: ArtistSignupExtra,
 ): Promise<StoredUser> {
   const users = await getAllUsers();
   if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
     throw new Error("email_taken");
   }
+
+  const userId = `usr-${crypto.randomBytes(8).toString("hex")}`;
+
+  let resolvedArtistId: string | undefined;
+
+  if (role === "artist") {
+    if (artistId) {
+      // Explicitly provided (admin assigning an existing Artist record)
+      resolvedArtistId = artistId;
+    } else {
+      // Self-registration via /creators/join — create a fresh "pending" Artist record
+      resolvedArtistId = await createPendingArtist(userId, name, email, signupExtra);
+    }
+  }
+
   const user: StoredUser = {
-    id: `usr-${crypto.randomBytes(8).toString("hex")}`,
+    id: userId,
     name,
     email: email.toLowerCase().trim(),
     role,
     passwordHash: await hashPassword(password),
-    ...(artistId ? { artistId } : {}),
+    ...(resolvedArtistId ? { artistId: resolvedArtistId } : {}),
     createdAt: new Date().toISOString(),
   };
   await saveAllUsers([...users, user]);
   return user;
 }
 
-export async function updateUser(id: string, patch: Partial<Pick<StoredUser, "name" | "artistId" | "role">>): Promise<StoredUser | null> {
+/**
+ * Creates a new Artist record with status "pending" linked to the given user.
+ * Called automatically during artist self-registration.
+ */
+async function createPendingArtist(
+  userId: string,
+  name: string,
+  _email: string,
+  extra?: ArtistSignupExtra,
+): Promise<string> {
+  const content = await getContent();
+
+  // Derive a unique slug from the name
+  const base = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]+/gu, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "artist";
+
+  let slug = base;
+  let i = 1;
+  while (content.artists.some((a) => a.slug === slug)) {
+    slug = `${base}-${i}`;
+    i += 1;
+  }
+
+  const artistId = `artist-${crypto.randomBytes(8).toString("hex")}`;
+
+  const cityVal = extra?.city?.trim() || "";
+  const instagramHandle = extra?.instagram?.replace(/^@/, "").trim() || undefined;
+
+  const newArtist = {
+    id: artistId,
+    slug,
+    name: { fa: name, en: name },
+    profession: {
+      fa: extra?.specialty || "هنرمند / طراح",
+      en: extra?.specialty || "Artist / Designer",
+    },
+    bio: { fa: "", en: "" },
+    avatar: "/images/artists/placeholder.jpg",
+    cover: "/images/artists/cover-placeholder.jpg",
+    location: { fa: cityVal, en: cityVal },
+    social: {
+      ...(instagramHandle ? { instagram: instagramHandle } : {}),
+      ...(extra?.portfolioUrl ? { website: extra.portfolioUrl } : {}),
+    },
+    featured: false,
+    followers: 0,
+    rating: 0,
+    reviewsCount: 0,
+    tags: [],
+    userId,
+    status: "pending" as const,
+    revenueSharePct: 30,
+    licenseType: "standard" as const,
+    ...(extra?.phone ? { signupPhone: extra.phone } : {}),
+    ...(extra?.city ? { signupCity: extra.city } : {}),
+    ...(extra?.specialty ? { signupSpecialty: extra.specialty } : {}),
+    ...(extra?.portfolioUrl ? { signupPortfolioUrl: extra.portfolioUrl } : {}),
+  };
+
+  await updateCollection("artists", [...content.artists, newArtist]);
+  return artistId;
+}
+
+export async function updateUser(id: string, patch: Partial<Pick<StoredUser, "name" | "artistId" | "role" | "passwordHash">>): Promise<StoredUser | null> {
   const users = await getAllUsers();
   const idx = users.findIndex((u) => u.id === id);
   if (idx === -1) return null;
+
+  // No fallback to artists[0] — adminAssigning role must provide an explicit artistId,
+  // or leave it blank (the artist may not yet have a linked profile).
+
   const updated = { ...users[idx], ...patch };
   users[idx] = updated;
   await saveAllUsers(users);

@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, Moon, Search, ShoppingBag, Sun, User, X } from "lucide-react";
+import { ChevronDown, Menu, Moon, ShoppingBag, Sun, User, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth, useCart, useLocale, useSearch, useTheme } from "@/components/providers/AppProviders";
+import { useAuth, useCart, useLocale, useTheme } from "@/components/providers/AppProviders";
 import { cn, href, t } from "@/lib/utils";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
@@ -18,7 +18,6 @@ export function Header({ nav }: { nav: NavData }) {
   const { locale, dict } = useLocale();
   const pathname = usePathname();
   const { count, open: openCart } = useCart();
-  const { open: openSearch } = useSearch();
   const { theme, toggle } = useTheme();
   const { user } = useAuth();
 
@@ -74,9 +73,10 @@ export function Header({ nav }: { nav: NavData }) {
     <>
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-[70] transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300",
+          "fixed inset-x-0 z-[70] transition-[background-color,border-color,box-shadow,backdrop-filter,top] duration-300",
           transparent ? "border-b border-transparent bg-transparent" : "glass border-b border-border/70 shadow-[0_1px_0_0_var(--border)]",
         )}
+        style={{ top: "var(--announce-h, 0px)" }}
         onMouseLeave={scheduleClose}
       >
         <div
@@ -86,9 +86,11 @@ export function Header({ nav }: { nav: NavData }) {
           )}
         >
           {/* Brand */}
-          <Link href={href(locale, "/")} className="flex items-center gap-2.5 shrink-0" aria-label={dict.brand}>
-            <Logo className={cn("h-7 w-7", transparent ? "text-white" : "text-foreground")} />
-            <span className={cn("font-display text-[22px] leading-none tracking-tight", transparent ? "text-white" : "text-foreground")}>Rosie Atelier</span>
+          <Link href={href(locale, "/")} className="flex items-center shrink-0 group" aria-label={dict.brand}>
+            <Logo className={cn(
+              "text-[17px] transition-opacity duration-300 group-hover:opacity-75",
+              transparent ? "text-white [--accent:rgba(255,255,255,0.75)]" : "text-foreground"
+            )} />
           </Link>
 
           {/* Desktop nav */}
@@ -118,20 +120,6 @@ export function Header({ nav }: { nav: NavData }) {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={openSearch}
-              aria-label={dict.nav.search}
-              className={cn("hidden md:inline-flex h-10 items-center gap-2 rounded-md px-3 text-[13px] transition-colors", transparent ? "text-white/80 hover:text-white hover:bg-white/10" : "text-foreground-secondary hover:text-foreground hover:bg-background-secondary")}
-            >
-              <Search className="h-4 w-4" />
-              <span className="hidden xl:inline">{dict.nav.search}</span>
-              <kbd className={cn("hidden xl:inline rounded-xs border px-1.5 py-0.5 font-mono text-[10px]", transparent ? "border-white/30" : "border-border")}>⌘K</kbd>
-            </button>
-            <button type="button" onClick={openSearch} aria-label={dict.nav.search} className={cn("md:hidden flex h-10 w-10 items-center justify-center rounded-md", transparent ? "text-white" : "text-foreground")}>
-              <Search className="h-5 w-5" />
-            </button>
-
             <Link
               href={switchHref}
               hrefLang={otherLocale}
@@ -145,8 +133,21 @@ export function Header({ nav }: { nav: NavData }) {
               {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
 
-            <Link href={href(locale, user ? "/account" : "/login")} aria-label={dict.nav.account} className={cn("hidden sm:flex h-10 w-10 items-center justify-center rounded-md transition-colors", transparent ? "text-white/85 hover:bg-white/10" : "text-foreground-secondary hover:bg-background-secondary hover:text-foreground")}>
-              <User className="h-[18px] w-[18px]" />
+            <Link
+              href={href(locale, user ? "/account" : "/login")}
+              aria-label={dict.nav.account}
+              className={cn("hidden sm:flex h-10 w-10 items-center justify-center rounded-md transition-colors", transparent ? "text-white/85 hover:bg-white/10" : "text-foreground-secondary hover:bg-background-secondary hover:text-foreground")}
+            >
+              {user ? (
+                <span className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold uppercase select-none",
+                  transparent ? "bg-white/20 text-white ring-2 ring-white/40" : "bg-accent text-white ring-2 ring-accent/30"
+                )}>
+                  {user.name.trim().charAt(0)}
+                </span>
+              ) : (
+                <User className="h-[18px] w-[18px]" />
+              )}
             </Link>
 
             <button type="button" onClick={openCart} aria-label={dict.nav.cart} className={cn("relative flex h-10 w-10 items-center justify-center rounded-md transition-colors", transparent ? "text-white hover:bg-white/10" : "text-foreground hover:bg-background-secondary")}>
@@ -192,7 +193,7 @@ function MobileMenu({ open, onClose, nav, links, switchHref, otherLocale }: { op
   }, [open]);
   return (
     <div className={cn("fixed inset-0 z-[65] lg:hidden transition-opacity duration-300", open ? "opacity-100" : "pointer-events-none opacity-0")} aria-hidden={!open}>
-      <div className="absolute inset-0 bg-background pt-[var(--header-h)] overflow-y-auto">
+      <div className="absolute inset-0 bg-background pt-[calc(var(--announce-h,0px)+var(--header-h))] overflow-y-auto">
         <div className="container-x pb-12 pt-4">
           <nav className="flex flex-col">
             {links.map((l, i) => (

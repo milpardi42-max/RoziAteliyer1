@@ -1,10 +1,69 @@
+"use client";
+
+/**
+ * Rosie Ateliyer — Brand Wordmark
+ *
+ * Pure HTML/CSS — uses the page's actual loaded fonts (Instrument Serif + Inter).
+ * Renders correctly at any size via className (h-* on the wrapper scales via em).
+ *
+ * `currentColor` on ROSIE → adapts to transparent (white) vs solid (dark) header.
+ * `var(--accent)`  on ATELIYER + rule → always the brand's warm bronze/gold.
+ */
 export function Logo({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className} aria-hidden>
-      <rect x="1.5" y="1.5" width="29" height="29" rx="4" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M16 6.5c-3.2 3.8-4.8 6.9-4.8 9.4 0 3.3 2.1 5.4 4.8 5.4s4.8-2.1 4.8-5.4c0-2.5-1.6-5.6-4.8-9.4Z" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M16 21.3v4.6M11 26h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <circle cx="16" cy="15.6" r="1.6" fill="currentColor" />
-    </svg>
+    <span
+      className={className}
+      style={{
+        display: "inline-flex",
+        flexDirection: "column",
+        lineHeight: 1,
+        userSelect: "none",
+        gap: 0,
+      }}
+    >
+      {/* Primary wordmark — Instrument Serif, uppercase, tracked */}
+      <span
+        style={{
+          fontFamily: "'Instrument Serif', Georgia, 'Times New Roman', serif",
+          fontSize: "1.22em",
+          fontWeight: 400,
+          letterSpacing: "0.17em",
+          textTransform: "uppercase",
+          color: "currentColor",
+          lineHeight: 1,
+          display: "block",
+        }}
+      >
+        Rosie
+      </span>
+
+      {/* Hairline rule */}
+      <span
+        style={{
+          display: "block",
+          height: "0.06em",
+          background: "var(--accent)",
+          opacity: 0.55,
+          margin: "0.18em 0 0.15em",
+          borderRadius: 0,
+        }}
+      />
+
+      {/* Sub-mark — Inter, extra spaced, accent colour */}
+      <span
+        style={{
+          fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+          fontSize: "0.46em",
+          fontWeight: 500,
+          letterSpacing: "0.35em",
+          textTransform: "uppercase",
+          color: "var(--accent)",
+          lineHeight: 1,
+          display: "block",
+        }}
+      >
+        Ateliyer
+      </span>
+    </span>
   );
 }

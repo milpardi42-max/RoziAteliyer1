@@ -36,6 +36,15 @@ export function ProfileHeader({ artist, counts, children }: { artist: Artist; co
                 <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{t(artist.location, locale)}</span>
                 <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-accent text-accent" />{n(artist.rating)} · {n(artist.reviewsCount)} {dict.common.reviews}</span>
               </div>
+              {artist.tags && artist.tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {artist.tags.map((tag) => (
+                    <span key={tag} className="rounded-full border border-border bg-background-secondary px-2.5 py-0.5 text-[11px] text-foreground-secondary">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 pb-1">

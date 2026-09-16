@@ -4,6 +4,7 @@ import {
   ArtistsSection,
   B2BCustomSection,
   BestSellersSection,
+  CategoriesSection,
   DiscoverySection,
   EducationSection,
   ExclusiveSection,
@@ -19,6 +20,8 @@ import { artistStats, enrichEducation, enrichPattern, enrichPortfolio, enrichPro
 import { dictionaries } from "@/lib/i18n/dictionary";
 import type { Locale } from "@/lib/i18n/types";
 import { t } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: Locale }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -53,6 +56,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
     <>
       {on("hero") && <Hero hero={site.hero} patterns={heroPatterns} stats={{ patterns: site.patterns.length * 40, artists: site.artists.length * 30, projects: site.portfolios.length * 20 }} />}
       {on("discovery") && <DiscoverySection patterns={patterns.filter((p) => p.featured)} categories={featuredCats} />}
+      {featuredCats.length > 0 && <CategoriesSection categories={featuredCats} />}
       {on("trending") && <PatternRail id="trending" eyebrow={d.common.trending} title={d.home.trendingTitle} description={d.home.trendingDesc} patterns={patterns.filter((p) => p.trending)} hrefPath="/patterns?sort=trending" tone="secondary" />}
       {on("bestSellers") && <BestSellersSection patterns={patterns.filter((p) => p.bestSeller)} products={products.filter((p) => p.bestSeller)} />}
       {on("newPatterns") && (
@@ -65,7 +69,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
       {on("portfolios") && <PortfoliosSection items={portfolios.filter((p) => p.featured)} eyebrow={d.nav.portfolio} title={d.home.portfolioTitle} description={d.home.portfolioDesc} hrefPath="/portfolio" />}
       {on("styles") && <StylesSection categories={featuredCats} counts={styleCounts} />}
       {on("spaces") && <SpacesSection spaces={site.spaces.slice().sort((a, b) => a.order - b.order)} />}
-      {on("exclusive") && <ExclusiveSection products={products.filter((p) => !p.artistId && p.featured)} />}
+      {on("exclusive") && <ExclusiveSection products={products.filter((p) => !p.artistId && p.featured)} heroImage={site.portfolios[0]?.cover ?? site.hero.image} />}
       {on("projects") && <PortfoliosSection items={portfolios.filter((p) => p.isProject)} eyebrow={d.nav.projects} title={d.home.projectsTitle} description={d.home.projectsDesc} hrefPath="/projects" />}
       {on("education") && <EducationSection items={[...education.filter((e) => e.featured), ...education.filter((e) => !e.featured && e.popular)]} />}
       {(on("b2b") || on("custom")) && <B2BCustomSection image1={site.portfolios[0]?.cover ?? site.hero.image} image2={site.portfolios[3]?.cover ?? site.hero.image} />}

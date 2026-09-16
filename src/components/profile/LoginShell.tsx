@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, Suspense } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Logo } from "@/components/layout/Logo";
 import { href } from "@/lib/utils";
@@ -12,13 +13,11 @@ import { useAuth } from "@/components/providers/AppProviders";
 interface LoginShellProps {
   locale: Locale;
   image: string;
-  dict: { login: string; signup: string };
+  dict: { login: string; signup: string; admin: string };
 }
 
-/* ── Inner component: needs useSearchParams → must live inside <Suspense> ── */
-function LoginShellInner({ locale, image, dict }: LoginShellProps) {
+export function LoginShell({ locale, image, dict }: LoginShellProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [leaving, setLeaving] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -44,7 +43,8 @@ function LoginShellInner({ locale, image, dict }: LoginShellProps) {
   );
 
   useEffect(() => {
-    const raw = searchParams.get("_t");
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("_t");
     if (!raw) return;
 
     // Strip token from URL immediately (no navigation)
@@ -61,8 +61,7 @@ function LoginShellInner({ locale, image, dict }: LoginShellProps) {
     } catch {
       // malformed token — ignore
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once on mount
+  }, [runAutoLogin]);
 
   const goToSignup = () => {
     if (leaving) return;
@@ -125,19 +124,15 @@ function LoginShellInner({ locale, image, dict }: LoginShellProps) {
                 prefill={prefill ?? undefined}
                 autoSubmitting={isSubmitting}
               />
+              <p className="auth-card__admin-link">
+                <Link href={href(locale, "/admin")}>
+                  {dict.admin}
+                </Link>
+              </p>
             </>
           )}
         </div>
       </div>
     </section>
-  );
-}
-
-/* ── Public export: wraps inner in Suspense so useSearchParams is safe ── */
-export function LoginShell(props: LoginShellProps) {
-  return (
-    <Suspense fallback={<div className="auth-shell-page" />}>
-      <LoginShellInner {...props} />
-    </Suspense>
   );
 }

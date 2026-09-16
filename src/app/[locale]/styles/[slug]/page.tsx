@@ -15,6 +15,8 @@ export async function generateStaticParams() {
   const site = await getSite();
   return LOCALES.flatMap((locale) => site.categories.map((category) => ({ locale, slug: category.slug })));
 }
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const site = await getSite();

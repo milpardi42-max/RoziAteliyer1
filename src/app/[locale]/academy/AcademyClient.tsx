@@ -31,7 +31,7 @@ import type { EducationCardData } from "@/components/cards/EducationCard";
 import type { Category } from "@/lib/types";
 
 /* ─── Types ─────────────────────────────────────────────────── */
-type Tab = "all" | "course" | "workshop" | "webinar" | "tutorial";
+type Tab = "all" | "course" | "workshop" | "webinar";
 type SortKey = "popular" | "newest" | "price_asc" | "price_desc";
 
 interface Props {
@@ -39,10 +39,11 @@ interface Props {
   categories: Category[];
 }
 
-/* ─── Deterministic price simulation (no type changes needed) ── */
+/* ─── Deterministic price simulation ─────────────────────────── */
 function getPrice(item: EducationCardData, locale: "fa" | "en"): { value: number; isFree: boolean } {
-  // Free if it's a very short tutorial (< 30 min) or article
-  if (item.type === "article" || item.durationMin < 30) return { value: 0, isFree: true };
+  // Free if it's a very short item (< 30 min) or has no price
+  if (item.price) return { value: item.price[locale], isFree: item.price[locale] === 0 };
+  if (item.durationMin < 30) return { value: 0, isFree: true };
   // Deterministic price based on item id hash
   const hash = item.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   if (locale === "fa") {
@@ -65,6 +66,10 @@ function formatItemPrice(item: EducationCardData, locale: "fa" | "en"): string {
 function EnrollModal({ item, onClose }: { item: EducationCardData; onClose: () => void }) {
   const { locale, dict } = useLocale();
   const [step, setStep] = useState<"details" | "form" | "success">("details");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [, startTransition] = useTransition();
   const isFA = locale === "fa";
   const { value: priceValue, isFree } = getPrice(item, locale);
@@ -73,17 +78,36 @@ function EnrollModal({ item, onClose }: { item: EducationCardData; onClose: () =
 
   const typeLabel = isFA
     ? item.type === "course" ? "دوره آموزشی"
-    : item.type === "tutorial" ? "آموزش ویدیویی"
-    : item.type === "path" ? "مسیر یادگیری"
-    : "مقاله / وبینار"
+    : item.type === "workshop" ? "ورکشاپ"
+    : "وبینار"
     : item.type === "course" ? "Course"
-    : item.type === "tutorial" ? "Tutorial"
-    : item.type === "path" ? "Learning Path"
-    : "Article / Webinar";
+    : item.type === "workshop" ? "Workshop"
+    : "Webinar";
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    startTransition(() => setStep("success"));
+    setError(null);
+    setSubmitting(true);
+    try {
+      if (item.type === "workshop" || item.type === "webinar") {
+        const response = await fetch(`/api/webinar/${item.slug}/signal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "register",
+            viewerId: `v-${btoa(email.trim().toLowerCase()).replace(/[^a-z0-9]/gi, "").slice(0, 12)}-${item.slug.slice(0, 6)}`,
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+          }),
+        });
+        if (!response.ok) throw new Error("registration_failed");
+      }
+      startTransition(() => setStep("success"));
+    } catch {
+      setError(isFA ? "ثبت‌نام انجام نشد. دوباره تلاش کنید." : "Registration failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -177,6 +201,8 @@ function EnrollModal({ item, onClose }: { item: EducationCardData; onClose: () =
                 <input
                   required
                   type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   placeholder={isFA ? "نام و نام خانوادگی" : "Full name"}
                   className="h-11 w-full rounded-lg border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors"
                 />
@@ -186,6 +212,8 @@ function EnrollModal({ item, onClose }: { item: EducationCardData; onClose: () =
                 <input
                   required
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder={isFA ? "ایمیل شما" : "Your email"}
                   className="h-11 w-full rounded-lg border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none transition-colors"
                 />
@@ -204,10 +232,11 @@ function EnrollModal({ item, onClose }: { item: EducationCardData; onClose: () =
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setStep("details")}>
                   {isFA ? "بازگشت" : "Back"}
                 </Button>
-                <Button type="submit" variant="accent" className="flex-1">
+                <Button type="submit" variant="accent" className="flex-1" disabled={submitting}>
                   {isFree ? (isFA ? "ثبت‌نام" : "Enroll") : (isFA ? "پرداخت" : "Pay now")}
                 </Button>
               </div>
+              {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
             </form>
           )}
 
@@ -216,9 +245,21 @@ function EnrollModal({ item, onClose }: { item: EducationCardData; onClose: () =
               <CheckCircle2 className="mx-auto mb-4 h-14 w-14 text-success" />
               <h4 className="font-display text-h3 text-foreground">{isFA ? "ثبت‌نام موفق!" : "You're enrolled!"}</h4>
               <p className="mt-2 text-body-sm text-foreground-secondary">
-                {isFA ? "لینک دسترسی به ایمیل شما ارسال شد." : "Access link has been sent to your email."}
+                {isFA ? "ثبت‌نام شما انجام شد. از همین‌جا وارد رویداد شوید." : "You are registered. Enter the event from here."}
               </p>
-              <Button className="mt-6" onClick={onClose}>{isFA ? "بازگشت به آکادمی" : "Back to Academy"}</Button>
+              {(item.type === "workshop" || item.type === "webinar") && item.liveEvent?.isOnline ? (
+                <Link
+                  href={href(locale, `/academy/${item.slug}/live`)}
+                  className="mt-6 inline-flex items-center justify-center rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent/90"
+                  onClick={onClose}
+                >
+                  {item.liveEvent.status === "live"
+                    ? (isFA ? "ورود به رویداد زنده" : "Enter live event")
+                    : (isFA ? "مشاهده صفحه ورود" : "Open event access page")}
+                </Link>
+              ) : (
+                <Button className="mt-6" onClick={onClose}>{isFA ? "بازگشت به آکادمی" : "Back to Academy"}</Button>
+              )}
             </div>
           )}
         </div>
@@ -399,13 +440,8 @@ function EventRow({ item, onEnroll }: { item: EducationCardData; onEnroll: (item
         </Link>
         <div className="flex flex-1 flex-col gap-1.5 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-caption font-medium",
-              item.type === "path" ? "bg-[#7c3aed]/10 text-[#7c3aed]" : "bg-success/10 text-success"
-            )}>
-              {item.type === "path"
-                ? <><Layers className="h-3 w-3" />{isFA ? "مسیر یادگیری" : "Learning Path"}</>
-                : <><Wifi className="h-3 w-3" />{isFA ? "وبینار / ورکشاپ" : "Webinar / Workshop"}</>}
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-caption font-medium bg-success/10 text-success">
+              <Wifi className="h-3 w-3" />{isFA ? "رویداد زنده" : "Live Event"}
             </span>
             {item.popular && (
               <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2.5 py-0.5 text-caption font-medium text-warning">
@@ -481,22 +517,14 @@ export function AcademyClient({ items, categories }: Props) {
   const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
     { key: "all", label: isFA ? "همه" : "All", icon: BookOpen },
     { key: "course", label: isFA ? "دوره‌ها" : "Courses", icon: Video },
-    { key: "tutorial", label: isFA ? "آموزش‌ها" : "Tutorials", icon: Play },
     { key: "workshop", label: isFA ? "ورکشاپ" : "Workshops", icon: Calendar },
     { key: "webinar", label: isFA ? "وبینار" : "Webinars", icon: Globe },
   ];
 
-  // Tab → type mapping
-  const typeForTab = (tab: Tab): string | null => {
-    if (tab === "all") return null;
-    if (tab === "workshop") return "path";
-    if (tab === "webinar") return "article";
-    return tab; // course | tutorial
-  };
-
   const filtered = items.filter((item) => {
-    const type = typeForTab(activeTab);
-    const tabMatch = !type || item.type === type;
+    const tabMatch =
+      activeTab === "all" ||
+      item.type === activeTab;
     const catMatch = activeCategory === "all" || item.categoryId === activeCategory;
     return tabMatch && catMatch;
   });
@@ -511,9 +539,9 @@ export function AcademyClient({ items, categories }: Props) {
     return 0;
   });
 
-  // Split by layout
-  const gridItems = sorted.filter((i) => i.type === "course" || i.type === "tutorial");
-  const eventItems = sorted.filter((i) => i.type === "path" || i.type === "article");
+  // Split by layout: workshops and webinars use EventRow; courses use CourseCard
+  const gridItems = sorted.filter((i) => i.type === "course");
+  const eventItems = sorted.filter((i) => i.type === "workshop" || i.type === "webinar");
 
   // Stats
   const totalCourses = items.filter((i) => i.type === "course").length;
@@ -638,13 +666,11 @@ export function AcademyClient({ items, categories }: Props) {
       </div>
 
       {/* ── Courses / Tutorials grid ───────────────────────────── */}
-      {(activeTab === "all" || activeTab === "course" || activeTab === "tutorial") && gridItems.length > 0 && (
+      {(activeTab === "all" || activeTab === "course") && gridItems.length > 0 && (
         <section className="container-x pb-14">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="font-display text-h3 text-foreground">
-              {activeTab === "tutorial"
-                ? (isFA ? "آموزش‌های ویدیویی" : "Video Tutorials")
-                : (isFA ? "دوره‌های آموزشی" : "Courses & Tutorials")}
+              {isFA ? "دوره‌های آموزشی" : "Courses"}
             </h2>
             <span className="text-caption text-muted tabular">
               {n(gridItems.length)} {isFA ? "مورد" : "items"}

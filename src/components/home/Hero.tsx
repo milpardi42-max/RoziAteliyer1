@@ -23,13 +23,21 @@ export function Hero({ hero, patterns, stats }: Props) {
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
 
+  /* resolve feature flags — default to enabled if not set */
+  const parallaxOn = hero.parallaxEnabled !== false;
+  const interactiveOn = hero.interactiveEnabled !== false;
+
   /* bg images: use hero.images if ≥2, otherwise null (fallback to single image / timer) */
   const bgImages = hero.images && hero.images.length > 1 ? hero.images : null;
   const count = bgImages ? bgImages.length : patterns.length;
 
-  /* ── scroll-driven mode (when bgImages exist) ── */
+  /* ── slider mode: force timer even when bgImages exist ── */
+  const forceSlider = hero.sliderMode === true;
+
+  /* ── scroll-driven mode (bgImages exist AND not sliderMode forced) ── */
   useEffect(() => {
-    if (!bgImages) return;
+    if (!bgImages || forceSlider) return;
+    if (!parallaxOn) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let ticking = false;
@@ -41,7 +49,6 @@ export function Hero({ hero, patterns, stats }: Props) {
         if (!wrapper) { ticking = false; return; }
 
         const { top, height } = wrapper.getBoundingClientRect();
-        /* scrolled fraction within the wrapper (0 → 1) */
         const scrolled = Math.max(0, Math.min(1, -top / (height - window.innerHeight)));
         const slide = scrolled * count;
         const idx = Math.min(Math.floor(slide), count - 1);
@@ -50,12 +57,10 @@ export function Hero({ hero, patterns, stats }: Props) {
         setActive(idx);
         setProgress(frac);
 
-        /* parallax on the sticky bg layer */
         if (mediaRef.current) {
           const y = Math.max(0, -top);
           mediaRef.current.style.transform = `translate3d(0, ${y * 0.08}px, 0) scale(1.06)`;
         }
-        /* pattern card floats upward */
         if (cardRef.current) {
           const y = Math.max(0, -top);
           cardRef.current.style.transform = `translate3d(0, ${-(y * 0.14)}px, 0)`;
@@ -66,16 +71,17 @@ export function Hero({ hero, patterns, stats }: Props) {
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    /* run once on mount so initial state is correct */
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count]);
+  }, [count, forceSlider, parallaxOn]);
 
-  /* ── timer-driven mode (no bgImages) ── */
+  /* ── timer-driven mode (no bgImages, OR sliderMode forced) ── */
   useEffect(() => {
-    if (bgImages) return;
-    if (patterns.length < 2) return;
+    const useTimer = !bgImages || forceSlider;
+    if (!useTimer) return;
+    const slideCount = bgImages ? bgImages.length : patterns.length;
+    if (slideCount < 2) return;
     const D = 5200;
     const start = performance.now();
     let raf = 0;
@@ -85,17 +91,19 @@ export function Hero({ hero, patterns, stats }: Props) {
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    const id = window.setInterval(() => setActive((a) => (a + 1) % patterns.length), D);
+    const id = window.setInterval(() => setActive((a) => (a + 1) % slideCount), D);
     return () => {
       cancelAnimationFrame(raf);
       window.clearInterval(id);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patterns.length]);
+  }, [patterns.length, forceSlider, bgImages]);
 
-  /* ── parallax for timer mode ── */
+  /* ── parallax for timer mode (no bgImages or forceSlider) ── */
   useEffect(() => {
-    if (bgImages) return;
+    const useTimer = !bgImages || forceSlider;
+    if (!useTimer) return;
+    if (!parallaxOn) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let ticking = false;
     const onScroll = () => {
@@ -114,27 +122,31 @@ export function Hero({ hero, patterns, stats }: Props) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [forceSlider, parallaxOn]);
 
   const current = patterns[active % patterns.length];
+
+  /* ── resolve which images to show as slides ── */
+  const slideImages = bgImages ?? null;
+  const activeSlideIndex = active % (slideImages ? slideImages.length : patterns.length);
 
   /* ── inner section (shared JSX) ── */
   const inner = (
     <section className={cn(
       "relative isolate w-full overflow-hidden bg-[#0d1117] text-white",
-      bgImages ? "sticky top-0 h-[100svh] min-h-[640px] max-h-[1080px]" : "h-[100svh] min-h-[640px] max-h-[1080px]"
+      (bgImages && !forceSlider) ? "sticky top-0 h-[100svh] min-h-[640px] max-h-[1080px]" : "h-[100svh] min-h-[640px] max-h-[1080px]"
     )}>
       {/* media */}
       <div ref={mediaRef} className="absolute inset-0 will-change-transform scale-[1.06]">
         {hero.video ? (
           <video src={hero.video} poster={hero.image} autoPlay muted loop playsInline className="h-full w-full object-cover" />
-        ) : bgImages ? (
-          bgImages.map((src, i) => (
+        ) : slideImages ? (
+          slideImages.map((src, i) => (
             <Image key={src} src={src} alt="" fill priority={i <= 1} quality={100}
               sizes="(min-width: 3840px) 3840px, (min-width: 2560px) 2560px, (min-width: 1920px) 1920px, 100vw"
               className={cn(
                 "object-cover transition-opacity duration-[1000ms] ease-[var(--ease-out)]",
-                i === active ? "opacity-100" : "opacity-0"
+                i === activeSlideIndex ? "opacity-100" : "opacity-0"
               )}
             />
           ))
@@ -151,7 +163,7 @@ export function Hero({ hero, patterns, stats }: Props) {
       <div className="absolute inset-0 bg-gradient-to-r from-[#0a0d13]/40 via-transparent to-transparent rtl:bg-gradient-to-l" />
       <div className="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_120px_30px_rgba(5,7,12,.25)]" />
 
-      <div className="container-x relative flex h-full flex-col justify-end pb-10 pt-[var(--header-h)] md:pb-14">
+      <div className="container-x relative flex h-full flex-col justify-end pb-10 pt-[calc(var(--announce-h,0px)+var(--header-h))] md:pb-14">
         <div className="grid items-end gap-6 lg:grid-cols-12 lg:gap-10">
           {/* copy */}
           <div className="lg:col-span-7">
@@ -212,18 +224,31 @@ export function Hero({ hero, patterns, stats }: Props) {
                     </div>
                   </Link>
                   {/* progress bar — scroll-driven or timer-driven */}
-                  <div className="flex items-center gap-2 px-2 pb-1 pt-3">
-                    {patterns.map((p, i) => (
-                      <button key={p.id} type="button" aria-label={t(p.title, locale)}
-                        onClick={() => !bgImages && setActive(i)}
-                        className="relative h-1 flex-1 overflow-hidden rounded-full bg-white/25"
-                      >
-                        <span className={cn("absolute inset-y-0 start-0 rounded-full bg-white", i < (active % patterns.length) && "w-full", i > (active % patterns.length) && "w-0")}
-                          style={i === (active % patterns.length) ? { width: `${progress * 100}%` } : undefined}
-                        />
-                      </button>
-                    ))}
-                  </div>
+                  {interactiveOn && (
+                    <div className="flex items-center gap-2 px-2 pb-1 pt-3">
+                      {patterns.map((p, i) => (
+                        <button key={p.id} type="button" aria-label={t(p.title, locale)}
+                          onClick={() => setActive(i)}
+                          className="relative h-1 flex-1 overflow-hidden rounded-full bg-white/25"
+                        >
+                          <span className={cn("absolute inset-y-0 start-0 rounded-full bg-white", i < (active % patterns.length) && "w-full", i > (active % patterns.length) && "w-0")}
+                            style={i === (active % patterns.length) ? { width: `${progress * 100}%` } : undefined}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {!interactiveOn && (
+                    <div className="flex items-center gap-2 px-2 pb-1 pt-3">
+                      {patterns.map((p, i) => (
+                        <div key={p.id} className="relative h-1 flex-1 overflow-hidden rounded-full bg-white/25">
+                          <span className={cn("absolute inset-y-0 start-0 rounded-full bg-white", i < (active % patterns.length) && "w-full", i > (active % patterns.length) && "w-0")}
+                            style={i === (active % patterns.length) ? { width: `${progress * 100}%` } : undefined}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -245,7 +270,7 @@ export function Hero({ hero, patterns, stats }: Props) {
   );
 
   /* scroll-driven: wrap in tall div so sticky section has room to "scroll through" */
-  if (bgImages) {
+  if (bgImages && !forceSlider) {
     return (
       <div ref={wrapperRef} style={{ height: `${count * 100}svh` }}>
         {inner}

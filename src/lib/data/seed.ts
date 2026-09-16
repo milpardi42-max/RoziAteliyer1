@@ -1,4 +1,5 @@
 import type {
+  AnnouncementBarConfig,
   Artist,
   Banner,
   Category,
@@ -6,6 +7,7 @@ import type {
   EducationItem,
   HeroContent,
   HomeSection,
+  LiveEventConfig,
   Pattern,
   Portfolio,
   Product,
@@ -47,6 +49,18 @@ export const spaces: Space[] = [
 /* ------------------------------------------------------------------ */
 export const artists: Artist[] = [
   {
+    id: "artist-razieh-khairipour", slug: "razieh-khairipour",
+    name: L("راضیه خیری پور", "Razieh Khairipour"),
+    profession: L("مدرس و میزبان آکادمی", "Academy instructor and host"),
+    bio: L("مدرس و میزبان ورکشاپ‌ها و وبینارهای آکادمی رزی.", "Instructor and host of Rosie Academy workshops and webinars."),
+    avatar: "/images/education/e01.jpg", cover: "/images/education/e01.jpg",
+    location: L("تهران", "Tehran"),
+    social: {},
+    featured: false, followers: 0, rating: 5, reviewsCount: 0,
+    tags: ["academy", "workshop", "webinar"],
+    status: "approved", revenueSharePct: 35, licenseType: "standard",
+  },
+  {
     id: "artist-niloufar-rad", slug: "niloufar-rad",
     name: L("نیلوفر راد", "Niloufar Rad"),
     profession: L("طراح کاغذدیواری و پارچه", "Wallpaper & textile designer"),
@@ -55,6 +69,8 @@ export const artists: Artist[] = [
     location: L("تهران", "Tehran"),
     social: { instagram: "niloufar.rad", behance: "niloufarrad" },
     featured: true, followers: 12800, rating: 4.9, reviewsCount: 143,
+    tags: ["botanical", "gouache", "residential"],
+    status: "approved", revenueSharePct: 35, licenseType: "standard",
   },
   {
     id: "artist-arman-kian", slug: "arman-kian",
@@ -65,6 +81,8 @@ export const artists: Artist[] = [
     location: L("اصفهان", "Isfahan"),
     social: { instagram: "arman.kian", website: "armankian.studio" },
     featured: true, followers: 8400, rating: 4.8, reviewsCount: 96,
+    tags: ["geometric", "hospitality", "curtain"],
+    status: "approved", revenueSharePct: 35, licenseType: "standard",
   },
   {
     id: "artist-sara-mehr", slug: "sara-mehr",
@@ -75,6 +93,8 @@ export const artists: Artist[] = [
     location: L("شیراز", "Shiraz"),
     social: { instagram: "sara.mehr.art" },
     featured: true, followers: 15200, rating: 4.9, reviewsCount: 211,
+    tags: ["floral", "kids", "illustration"],
+    status: "approved", revenueSharePct: 35, licenseType: "standard",
   },
   {
     id: "artist-hossein-tabrizi", slug: "hossein-tabrizi",
@@ -85,6 +105,8 @@ export const artists: Artist[] = [
     location: L("تبریز", "Tabriz"),
     social: { website: "tabrizi-atelier.ir" },
     featured: true, followers: 6100, rating: 5, reviewsCount: 58,
+    tags: ["persian", "ornament", "luxury"],
+    status: "approved", revenueSharePct: 40, licenseType: "exclusive",
   },
 ];
 
@@ -436,12 +458,94 @@ export const portfolios: Portfolio[] = [
 /* ------------------------------------------------------------------ */
 const body = (fa: string, en: string) => L(fa, en);
 export const education: EducationItem[] = [
-  { id: "edu-pattern-design-foundations", slug: "pattern-design-foundations", type: "course", title: L("مبانی طراحی الگو", "Pattern Design Foundations"), excerpt: L("از موتیف تا تکرار بی‌درز؛ برای کاغذدیواری، پارچه و پرده.", "From motif to seamless repeat — for wallpaper, fabric and curtains."), body: body("در این دوره یاد می‌گیرید چطور یک موتیف را طراحی، پالت را انتخاب و تکرار بی‌درز بسازید. هر درس با تمرین عملی همراه است.\n\nفصل اول به مشاهده و اسکیس می‌پردازد. فصل دوم به ساختار تکرار: بلوک، نیم‌افت و آجری. فصل سوم درباره‌ی رنگ و مقیاس برای کاغذ دیواری و پارچه است.", "In this course you learn to design a motif, choose a palette and build a seamless repeat. Every lesson comes with a practical exercise.\n\nChapter one covers observation and sketching. Chapter two covers repeat structures: block, half-drop and brick. Chapter three covers colour and scale for wallpaper and textile."), image: "/images/education/e01.jpg", authorId: "artist-niloufar-rad", difficulty: "beginner", durationMin: 420, lessons: 18, categoryId: "cat-botanical", patternIds: ["pattern-quiet-garden", "pattern-dusty-bloom"], productIds: ["product-wallpaper-quiet-garden", "product-fabric-dusty-bloom"], featured: true, popular: true, publishedAt: "2026-06-01" },
-  { id: "edu-gouache-botanicals", slug: "gouache-botanicals", type: "tutorial", title: L("گیاهان با گواش", "Botanicals in Gouache"), excerpt: L("یک برگ سرخس را از اسکیس تا اسکن آماده‌ی چاپ دنبال کنید.", "Follow a single fern frond from sketch to print-ready scan."), body: body("در این آموزش کوتاه، نیلوفر راد فرآیند نقاشی یک برگ را با گواش نشان می‌دهد و نکات اسکن و تمیزکاری دیجیتال را می‌گوید.", "In this short tutorial, Niloufar Rad shows the process of painting a single leaf in gouache and shares scanning and digital clean-up tips."), image: "/images/education/e02.jpg", authorId: "artist-niloufar-rad", difficulty: "intermediate", durationMin: 35, lessons: 1, categoryId: "cat-botanical", patternIds: ["pattern-quiet-garden"], productIds: [], featured: true, popular: true, publishedAt: "2026-07-14" },
+  { id: "edu-pattern-design-foundations", slug: "pattern-design-foundations", type: "course", title: L("مبانی طراحی الگو", "Pattern Design Foundations"), excerpt: L("از موتیف تا تکرار بی‌درز؛ برای کاغذدیواری، پارچه و پرده.", "From motif to seamless repeat — for wallpaper, fabric and curtains."), body: body("در این دوره یاد می‌گیرید چطور یک موتیف را طراحی، پالت را انتخاب و تکرار بی‌درز بسازید. هر درس با تمرین عملی همراه است.\n\nفصل اول به مشاهده و اسکیس می‌پردازد. فصل دوم به ساختار تکرار: بلوک، نیم‌افت و آجری. فصل سوم درباره‌ی رنگ و مقیاس برای کاغذ دیواری و پارچه است.", "In this course you learn to design a motif, choose a palette and build a seamless repeat. Every lesson comes with a practical exercise.\n\nChapter one covers observation and sketching. Chapter two covers repeat structures: block, half-drop and brick. Chapter three covers colour and scale for wallpaper and textile."), image: "/images/education/e01.jpg", authorId: "artist-niloufar-rad", difficulty: "beginner", durationMin: 420, lessons: 18, price: { fa: 980000, en: 29 }, lessonList: [ { id: "l01", title: L("معرفی دوره و ابزارها", "Course intro & tools"), durationMin: 12, free: true }, { id: "l02", title: L("مشاهده و اسکیس اولیه", "Observation & first sketch"), durationMin: 22, free: true }, { id: "l03", title: L("ساده‌سازی موتیف", "Simplifying the motif"), durationMin: 28 }, { id: "l04", title: L("تکرار بلوک", "Block repeat"), durationMin: 24 }, { id: "l05", title: L("تکرار نیم‌افت", "Half-drop repeat"), durationMin: 26 }, { id: "l06", title: L("تکرار آجری", "Brick repeat"), durationMin: 24 }, { id: "l07", title: L("انتخاب پالت رنگی", "Choosing a colour palette"), durationMin: 30 }, { id: "l08", title: L("مقیاس برای کاغذدیواری", "Scale for wallpaper"), durationMin: 22 }, { id: "l09", title: L("مقیاس برای پارچه", "Scale for fabric"), durationMin: 20 }, { id: "l10", title: L("تبدیل به فایل دیجیتال", "Converting to digital file"), durationMin: 35 }, { id: "l11", title: L("تمیزکاری و اسکن", "Clean-up & scanning"), durationMin: 28 }, { id: "l12", title: L("رنگ‌بندی جدید (کالروِی)", "New colourway"), durationMin: 30 }, { id: "l13", title: L("آماده‌سازی فایل چاپ", "Preparing print file"), durationMin: 25 }, { id: "l14", title: L("خروجی AI و PDF", "Exporting AI & PDF"), durationMin: 18 }, { id: "l15", title: L("ارائه به مشتری", "Presenting to a client"), durationMin: 20 }, { id: "l16", title: L("لایسنس تجاری", "Commercial licence"), durationMin: 15 }, { id: "l17", title: L("قیمت‌گذاری و فروش", "Pricing & selling"), durationMin: 18 }, { id: "l18", title: L("پروژه نهایی", "Final project"), durationMin: 45 }, ], categoryId: "cat-botanical", patternIds: ["pattern-quiet-garden", "pattern-dusty-bloom"], productIds: ["product-wallpaper-quiet-garden", "product-fabric-dusty-bloom"], featured: true, popular: true, publishedAt: "2026-06-01" },
+  { id: "edu-colour-for-interiors", slug: "colour-for-interiors", type: "course", title: L("رنگ برای فضای داخلی", "Colour for Interiors"), excerpt: L("چطور پالت کاغذدیواری، پارچه و پرده را با نور فضا هماهنگ کنیم.", "How to tune wallpaper, fabric and curtain palettes to a room's light."), body: body("سارا مهر با مثال‌های واقعی توضیح می‌دهد چطور یک پالت را برای نور شمالی یا جنوبی تنظیم کند.", "Sara Mehr explains with real examples how to adjust a palette for north- or south-facing light."), image: "/images/education/e02.jpg", authorId: "artist-sara-mehr", difficulty: "intermediate", durationMin: 180, lessons: 6, price: { fa: 590000, en: 18 }, categoryId: "cat-floral", patternIds: ["pattern-dusty-bloom", "pattern-little-moons"], productIds: [], featured: false, popular: true, publishedAt: "2026-08-05", draftStatus: "published" as const },
   { id: "edu-geometry-and-rhythm", slug: "geometry-and-rhythm", type: "course", title: L("هندسه و ریتم", "Geometry & Rhythm"), excerpt: L("ساخت الگوهای هندسی دقیق برای کاغذدیواری و پارچه مبلی.", "Building precise geometric patterns for wallpaper and upholstery fabric."), body: body("آرمان کیان روش کارش با شبکه‌های شش‌ضلعی و تقارن‌های ۱۷گانه را آموزش می‌دهد.", "Arman Kian teaches his method with hexagonal grids and the 17 wallpaper symmetry groups."), image: "/images/education/e03.jpg", authorId: "artist-arman-kian", difficulty: "advanced", durationMin: 300, lessons: 12, categoryId: "cat-geometric", patternIds: ["pattern-arc-lattice", "pattern-hairline-grid"], productIds: ["product-fabric-arc-lattice", "product-wallpaper-copper-damask"], featured: true, popular: false, publishedAt: "2026-05-20" },
-  { id: "edu-reading-persian-ornament", slug: "reading-persian-ornament", type: "article", title: L("خواندن نقش ایرانی", "Reading Persian Ornament"), excerpt: L("اسلیمی، ختایی و بته‌جقه؛ از کاغذدیواری تا دکور.", "Eslimi, khatai and boteh — from wallpaper to décor."), body: body("این مقاله سه خانواده‌ی اصلی نقش ایرانی را معرفی می‌کند و نشان می‌دهد چطور می‌توان آن‌ها را برای کاغذدیواری، پرده و دکور معاصر ساده کرد.", "This article introduces the three main families of Persian ornament and shows how to simplify them for contemporary wallpaper, curtains and décor."), image: "/images/education/e04.jpg", authorId: "artist-hossein-tabrizi", difficulty: "beginner", durationMin: 12, lessons: 1, categoryId: "cat-persian", patternIds: ["pattern-lapis-eslimi"], productIds: ["product-wallpaper-lapis-eslimi", "product-decor-lapis-rug"], featured: false, popular: true, publishedAt: "2026-04-02" },
-  { id: "edu-path-surface-designer", slug: "path-surface-designer", type: "path", title: L("مسیر: طراح سطح حرفه‌ای", "Path: Professional Surface Designer"), excerpt: L("مسیر یادگیری چهارمرحله‌ای از مبانی تا عرضه در مارکت‌پلیس.", "A four-stage learning path from foundations to marketplace launch."), body: body("مرحله ۱: مبانی. مرحله ۲: تکنیک. مرحله ۳: تولید و فایل نهایی. مرحله ۴: لایسنس، قیمت‌گذاری و انتشار در رزی آتلیه.", "Stage 1: foundations. Stage 2: technique. Stage 3: production files. Stage 4: licensing, pricing and publishing on Rosie Atelier."), image: "/images/education/e05.jpg", authorId: "artist-niloufar-rad", difficulty: "beginner", durationMin: 1200, lessons: 46, categoryId: "cat-contemporary", patternIds: [], productIds: [], featured: true, popular: false, publishedAt: "2026-03-10" },
-  { id: "edu-colour-for-interiors", slug: "colour-for-interiors", type: "tutorial", title: L("رنگ برای فضای داخلی", "Colour for Interiors"), excerpt: L("چطور پالت کاغذدیواری، پارچه و پرده را با نور فضا هماهنگ کنیم.", "How to tune wallpaper, fabric and curtain palettes to a room's light."), body: body("سارا مهر با مثال‌های واقعی توضیح می‌دهد چطور یک پالت را برای نور شمالی یا جنوبی تنظیم کند.", "Sara Mehr explains with real examples how to adjust a palette for north- or south-facing light."), image: "/images/education/e06.jpg", authorId: "artist-sara-mehr", difficulty: "intermediate", durationMin: 48, lessons: 1, categoryId: "cat-floral", patternIds: ["pattern-dusty-bloom", "pattern-little-moons"], productIds: ["product-fabric-dusty-bloom", "product-curtain-quiet-garden"], featured: false, popular: true, publishedAt: "2026-08-05" },
+  { id: "edu-persian-ornament-course", slug: "persian-ornament-course", type: "course", title: L("نقش ایرانی: اسلیمی و ختایی", "Persian Ornament: Eslimi & Khatai"), excerpt: L("یادگیری سه خانواده اصلی نقش ایرانی برای طراحی معاصر.", "Learning the three main families of Persian ornament for contemporary design."), body: body("حسین تبریزی با چهار دهه تجربه، اسلیمی، ختایی و بته‌جقه را آموزش می‌دهد.", "Hossein Tabrizi with four decades of experience teaches eslimi, khatai and boteh."), image: "/images/education/e04.jpg", authorId: "artist-hossein-tabrizi", difficulty: "intermediate", durationMin: 360, lessons: 14, price: { fa: 890000, en: 27 }, categoryId: "cat-persian", patternIds: ["pattern-lapis-eslimi"], productIds: [], featured: false, popular: true, publishedAt: "2026-04-02", draftStatus: "published" as const },
+
+  /* ── ورکشاپ آنلاین ── */
+  {
+    id: "edu-workshop-botanical-repeat",
+    slug: "workshop-botanical-repeat",
+    type: "workshop",
+    title: L("ورکشاپ: تکرار گیاهی در Illustrator", "Workshop: Botanical Repeat in Illustrator"),
+    excerpt: L("یک جلسه ۲ ساعته زنده با راضیه خیری پور — از اسکچ تا پترن آماده چاپ.", "A 2-hour live session with Razieh Khairipour — from sketch to print-ready pattern."),
+    body: body(
+      "در این ورکشاپ زنده، راضیه خیری پور گام‌به‌گام یک پترن گیاهی را در Adobe Illustrator می‌سازد. شرکت‌کنندگان می‌توانند سؤال بپرسند و فایل‌ها را بعد از جلسه دریافت کنند.",
+      "In this live workshop, Razieh Khairipour builds a botanical pattern step-by-step in Adobe Illustrator. Participants can ask questions and receive files after the session."
+    ),
+    image: "/images/education/e01.jpg",
+    authorId: "artist-razieh-khairipour",
+    difficulty: "intermediate",
+    durationMin: 120,
+    lessons: 1,
+    price: { fa: 450000, en: 14 },
+    categoryId: "cat-botanical",
+    patternIds: ["pattern-quiet-garden"],
+    productIds: [],
+    featured: true,
+    popular: true,
+    publishedAt: "2026-09-10",
+    liveEvent: {
+      isOnline: true,
+      startsAt: "2026-09-20T17:00:00.000Z",
+      durationMin: 120,
+      capacity: 30,
+      registeredCount: 24,
+      meetLink: "https://zoom.us/j/123456789",
+      platform: "Zoom",
+      status: "scheduled",
+      certificateEnabled: true,
+      recordingDownloadable: true,
+      recordingPublic: false,
+      hostName: L("راضیه خیری پور", "Razieh Khairipour"),
+      hostNameCustom: true,
+    } satisfies LiveEventConfig,
+  },
+
+  /* ── وبینار ── */
+  {
+    id: "edu-webinar-market-trends-2026",
+    slug: "webinar-market-trends-2026",
+    type: "webinar",
+    title: L("وبینار: ترندهای بازار کاغذدیواری ۲۰۲۶", "Webinar: Wallpaper Market Trends 2026"),
+    excerpt: L("بررسی ترندهای رنگ، الگو و متریال برای سال آینده با کارشناسان صنعت.", "An expert panel reviewing colour, pattern and material trends for the coming year."),
+    body: body(
+      "این وبینار رایگان با حضور سه متخصص صنعت، آخرین گزارش‌های بازار جهانی کاغذدیواری را بررسی می‌کند و پیش‌بینی‌هایی برای ۲۰۲۶ ارائه می‌دهد.",
+      "This free webinar features three industry specialists reviewing the latest global wallpaper market reports and offering predictions for 2026."
+    ),
+    image: "/images/education/e03.jpg",
+    authorId: "artist-razieh-khairipour",
+    difficulty: "beginner",
+    durationMin: 90,
+    lessons: 1,
+    price: undefined,
+    categoryId: "cat-contemporary",
+    patternIds: [],
+    productIds: [],
+    featured: false,
+    popular: true,
+    publishedAt: "2026-09-15",
+    liveEvent: {
+      isOnline: true,
+      startsAt: "2026-09-25T15:00:00.000Z",
+      durationMin: 90,
+      capacity: 200,
+      registeredCount: 87,
+      status: "scheduled",
+      certificateEnabled: false,
+      recordingDownloadable: true,
+      recordingPublic: true,
+      hostName: L("راضیه خیری پور", "Razieh Khairipour"),
+      hostNameCustom: true,
+      webinarStream: {
+        source: "camera",
+        chatEnabled: true,
+        qaEnabled: true,
+        maxViewers: 200,
+      },
+    } satisfies LiveEventConfig,
+  },
 ];
 
 export const stories: Story[] = [
@@ -462,6 +566,53 @@ export const homeSections: HomeSection[] = [
 
 export const banners: Banner[] = [
   { id: "banner-free-shipping", title: L("ارسال رایگان", "Free shipping"), text: L("برای سفارش‌های کالکشن اختصاصی بالای ۲ میلیون تومان", "On exclusive collection orders over $120"), href: "/shop", enabled: true, placement: "shop" },
+];
+
+export const announcementBars: AnnouncementBarConfig[] = [
+  {
+    id: "ab-live-webinar",
+    kind: "live-webinar",
+    enabled: false,
+    message: L("وبینار زنده!", "Live now!"),
+    href: "",
+    ctaLabel: L("ورود به رویداد", "Join now"),
+    bgColor: "#dc2626",
+    textColor: "#ffffff",
+    transition: "slide-down",
+  },
+  {
+    id: "ab-webinar",
+    kind: "webinar",
+    enabled: false,
+    message: L("وبینار طراحی الگو — همین حالا ثبت‌نام کنید!", "Pattern design webinar — register now!"),
+    href: "/academy",
+    ctaLabel: L("ثبت‌نام", "Register"),
+    bgColor: "#1a1a2e",
+    textColor: "#ffffff",
+    transition: "slide-down",
+  },
+  {
+    id: "ab-sale",
+    kind: "sale",
+    enabled: false,
+    message: L("حراجی ویژه — تا ۴۰٪ تخفیف روی همه محصولات!", "Special sale — up to 40% off all products!"),
+    href: "/shop",
+    ctaLabel: L("مشاهده تخفیف‌ها", "Shop sale"),
+    bgColor: "#b91c1c",
+    textColor: "#ffffff",
+    transition: "slide-down",
+  },
+  {
+    id: "ab-custom",
+    kind: "custom",
+    enabled: false,
+    message: L("پیام سفارشی خود را اینجا بنویسید.", "Write your custom message here."),
+    href: "/",
+    ctaLabel: L("بیشتر بدانید", "Learn more"),
+    bgColor: "#1e2230",
+    textColor: "#ffffff",
+    transition: "fade",
+  },
 ];
 
 export const seo: SeoMeta[] = [
@@ -491,5 +642,5 @@ export const hero: HeroContent = {
 };
 
 export const seedContent: SiteContent = {
-  categories, spaces, artists, patterns, products, portfolios, education, stories, collections, homeSections, banners, seo, hero,
+  categories, spaces, artists, patterns, products, portfolios, education, stories, collections, homeSections, banners, seo, hero, announcementBars,
 };

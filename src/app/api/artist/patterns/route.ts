@@ -18,6 +18,29 @@ function unauthorized() {
   return NextResponse.json({ ok: false, error: "unauthorized" }, withNoStore({ status: 401 }));
 }
 
+function toSlug(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}\s-]+/gu, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "item";
+}
+
+function makeUniqueSlug(base: string, existing: Array<{ slug: string }>) {
+  const slug = toSlug(base) || `item-${Date.now().toString(36)}`;
+  let candidate = slug;
+  let index = 1;
+
+  while (existing.some((item) => item.slug === candidate)) {
+    candidate = `${slug}-${index}`;
+    index += 1;
+  }
+
+  return candidate;
+}
+
 /** GET /api/artist/patterns — returns patterns belonging to the logged-in artist */
 export async function GET() {
   const session = await requireArtist();
@@ -26,12 +49,12 @@ export async function GET() {
   const content = await getContent();
 
   if (session.role === "admin") {
-    return NextResponse.json({ ok: true, patterns: content.patterns, products: content.products }, withNoStore());
+    return NextResponse.json({ ok: true, patterns: content.patterns, products: content.products, categories: content.categories, spaces: content.spaces }, withNoStore());
   }
 
   const artistId = session.artistId;
   if (!artistId) {
-    return NextResponse.json({ ok: true, patterns: [], products: [] }, withNoStore());
+    return NextResponse.json({ ok: true, patterns: [], products: [], categories: content.categories, spaces: content.spaces }, withNoStore());
   }
 
   return NextResponse.json(
@@ -39,6 +62,8 @@ export async function GET() {
       ok: true,
       patterns: content.patterns.filter((p) => p.artistId === artistId),
       products: content.products.filter((p) => p.artistId === artistId),
+      categories: content.categories,
+      spaces: content.spaces,
     },
     withNoStore(),
   );
@@ -54,16 +79,25 @@ export async function POST(req: Request) {
 
   const artistId = session.role === "admin" ? ((body.artistId as string | null) ?? null) : (session.artistId ?? null);
   const content = await getContent();
+  const categoryId = (body.categoryId as string | null) ?? (content.categories[0]?.id ?? "");
+
+  if (!categoryId || !content.categories.some((c) => c.id === categoryId)) {
+    return NextResponse.json({ ok: false, error: "invalid_category" }, withNoStore({ status: 400 }));
+  }
 
   if (body._type === "product") {
     // Create product
+    const title = (body.title as Product["title"]) ?? { fa: "محصول جدید", en: "New product" };
     const product: Product = {
       id: `prod-${crypto.randomBytes(6).toString("hex")}`,
       sku: (body.sku as string) ?? `SKU-${Date.now().toString(36).toUpperCase()}`,
-      slug: (body.slug as string) ?? `product-${Date.now().toString(36)}`,
+      slug: makeUniqueSlug(
+        ((body.slug as string) || title.fa || title.en || `product-${Date.now().toString(36)}`),
+        [...content.products, ...content.patterns],
+      ),
       title: (body.title as Product["title"]) ?? { fa: "محصول جدید", en: "New product" },
       description: (body.description as Product["description"]) ?? { fa: "", en: "" },
-      categoryId: (body.categoryId as string) ?? (content.categories[0]?.id ?? ""),
+      categoryId,
       patternId: (body.patternId as string | null) ?? null,
       artistId,
       price: (body.price as Product["price"]) ?? { fa: 0, en: 0 },
@@ -89,15 +123,16 @@ export async function POST(req: Request) {
     colorways[0]?.image ||
     (b.image as string) ||
     "/images/collections/s01.jpg";
+  const title = (b.title as Pattern["title"]) ?? { fa: "الگوی جدید", en: "New pattern" };
   const pattern: Pattern = {
     id: `pat-${crypto.randomBytes(6).toString("hex")}`,
     sku: (b.sku as string) ?? `PAT-${Date.now().toString(36).toUpperCase()}`,
-    slug: (b.slug as string) ?? `pattern-${Date.now().toString(36)}`,
+    slug: makeUniqueSlug((b.slug as string) || title.fa || title.en || `pattern-${Date.now().toString(36)}`, [...content.products, ...content.patterns]),
     title: (b.title as Pattern["title"]) ?? { fa: "الگوی جدید", en: "New pattern" },
     description: (b.description as Pattern["description"]) ?? { fa: "", en: "" },
     image: defaultImage,
     gallery: (b.gallery as string[]) ?? (colorways.map((c) => c.image).filter(Boolean) as string[]),
-    categoryId: (b.categoryId as string) ?? (content.categories[0]?.id ?? ""),
+    categoryId,
     spaceIds: (b.spaceIds as string[]) ?? [],
     artistId,
     price: (b.price as Pattern["price"]) ?? { fa: 0, en: 0 },

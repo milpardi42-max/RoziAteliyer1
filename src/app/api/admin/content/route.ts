@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { withNoStore } from "@/lib/http";
-import { getContent, resetContent, saveContent } from "@/lib/data/store";
+import { getContent, getContentWithEtag, resetContent, saveContent } from "@/lib/data/store";
 import type { SiteContent } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +22,10 @@ function unauthorized() {
 
 export async function GET() {
   if (!(await requireAdmin())) return unauthorized();
-  return NextResponse.json(await getContent(), withNoStore());
+  const [content, etag] = await getContentWithEtag();
+  const res = NextResponse.json(content, withNoStore());
+  if (etag) res.headers.set("ETag", `"${etag}"`);
+  return res;
 }
 
 export async function PUT(req: Request) {
@@ -31,9 +34,17 @@ export async function PUT(req: Request) {
   if (!body || !Array.isArray(body.patterns) || !Array.isArray(body.products)) {
     return NextResponse.json({ ok: false, error: "invalid_payload" }, withNoStore({ status: 400 }));
   }
+
+  // Optional optimistic locking: If-Match header
+  const ifMatch = req.headers.get("If-Match");
+  const expectedEtag = ifMatch ? ifMatch.replace(/^"|"$/g, "") : undefined;
+
   try {
-    await saveContent(body);
+    await saveContent(body, expectedEtag);
   } catch (e) {
+    if (e instanceof Error && e.message === "etag_conflict") {
+      return NextResponse.json({ ok: false, error: "etag_conflict" }, withNoStore({ status: 409 }));
+    }
     console.error("[admin/content] storage write failed:", e);
     return NextResponse.json({ ok: false, error: "storage_write_failed" }, withNoStore({ status: 502 }));
   }

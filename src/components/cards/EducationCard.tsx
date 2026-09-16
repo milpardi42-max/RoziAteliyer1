@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bookmark, Clock, Layers, Signal } from "lucide-react";
+import { Bookmark, Clock, Layers, Radio, Signal } from "lucide-react";
 import { useState } from "react";
 import { useLocale } from "@/components/providers/AppProviders";
 import { Badge } from "@/components/ui/Badge";
@@ -36,12 +36,29 @@ export function EducationCard({ item, variant = "default", className, progress }
     );
   }
 
+  const isLive = item.liveEvent?.status === "live";
+  const isScheduled = item.liveEvent?.status === "scheduled";
+  const isFA = locale === "fa";
+
   return (
     <SpotlightCard as="article" className={cn("group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-medium", className)}>
       <Link href={url} className={cn("relative block overflow-hidden bg-background-secondary", variant === "large" ? "aspect-[16/9]" : "aspect-[16/10]")}>
         <Image src={item.image} alt={t(item.title, locale)} fill sizes="(max-width:768px) 100vw, 33vw" className="img-zoom object-cover" />
         <div className="absolute inset-x-3 top-3 flex items-center justify-between">
-          <Badge tone="glass">{typeLabel}</Badge>
+          <div className="flex items-center gap-1.5">
+            <Badge tone="glass">{typeLabel}</Badge>
+            {isLive && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                <Radio className="h-2.5 w-2.5 animate-pulse" />
+                {isFA ? "زنده" : "LIVE"}
+              </span>
+            )}
+            {isScheduled && !isLive && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+                {isFA ? "به‌زودی" : "SOON"}
+              </span>
+            )}
+          </div>
           <button
             type="button"
             aria-pressed={saved}

@@ -17,6 +17,9 @@ import { dictionaries } from "@/lib/i18n/dictionary";
 import type { Locale } from "@/lib/i18n/types";
 import { faNum, href, t } from "@/lib/utils";
 import { AcademyClient } from "./AcademyClient";
+import { LiveEventBanner } from "@/components/academy/LiveEventBanner";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -45,6 +48,14 @@ export default async function AcademyPage({
   const all = site.education.map((e) => enrichEducation(site, e));
   const featured = all.find((e) => e.featured && e.type === "course") ?? all[0];
   const courses = all.filter((e) => e.type === "course");
+
+  // Pick the most relevant live/upcoming event for the banner
+  const liveEvent =
+    all.find((e) => (e.type === "webinar" || e.type === "workshop") && e.liveEvent?.status === "live") ??
+    all
+      .filter((e) => (e.type === "webinar" || e.type === "workshop") && e.liveEvent?.status === "scheduled")
+      .sort((a, b) => new Date(a.liveEvent!.startsAt).getTime() - new Date(b.liveEvent!.startsAt).getTime())[0] ??
+    null;
   const n = (v: number) => (isFA ? faNum(v) : String(v));
   const cats = site.categories.filter((c) =>
     site.education.some((e) => e.categoryId === c.id)
@@ -387,6 +398,13 @@ export default async function AcademyPage({
           </div>
         </div>
       </section>
+
+      {/* ── Live event banner ─────────────────────────────────── */}
+      {liveEvent && (
+        <section className="container-x pb-0 pt-10">
+          <LiveEventBanner event={liveEvent} />
+        </section>
+      )}
 
       {/* ── Interactive catalog (client component) ────────────── */}
       <AcademyClient items={all} categories={cats} />

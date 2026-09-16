@@ -26,7 +26,7 @@ export function useProductColor(product: Product) {
   return { colorId, setColorId, color };
 }
 
-export function ProductCard({ product, variant = "default", className, priority }: { product: ProductCardData; variant?: "default" | "large" | "row"; className?: string; priority?: boolean }) {
+export function ProductCard({ product, variant = "default", className, priority }: { product: ProductCardData; variant?: "default" | "large" | "row" | "compact"; className?: string; priority?: boolean }) {
   const { locale, dict } = useLocale();
   const { colorId, setColorId, color } = useProductColor(product);
   const [quick, setQuick] = useState(false);
@@ -70,7 +70,7 @@ export function ProductCard({ product, variant = "default", className, priority 
     <>
       <SpotlightCard as="article" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onClick={onClick} className={cn("group relative flex flex-col rounded-lg", className)}>
         <Link href={url} className="relative block overflow-hidden rounded-lg bg-background-secondary" aria-label={t(product.title, locale)}>
-          <div className={cn("relative w-full", variant === "large" ? "aspect-[4/5]" : "aspect-square")}>
+          <div className={cn("relative w-full", variant === "large" ? "aspect-[4/5]" : variant === "compact" ? "aspect-[2/1]" : "aspect-square")}>
             <Image
               key={color.image}
               src={color.image}
@@ -98,7 +98,7 @@ export function ProductCard({ product, variant = "default", className, priority 
           </div>
         </Link>
 
-        <div className="flex flex-col gap-2 pt-3.5">
+        <div className="flex flex-col gap-2 px-3 pt-3 pb-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <Link href={url} className={cn("block truncate font-medium text-foreground transition-colors hover:text-accent", variant === "large" ? "text-h4" : "text-[15px]")}>{t(product.title, locale)}</Link>

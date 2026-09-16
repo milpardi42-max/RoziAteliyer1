@@ -31,9 +31,8 @@ export function Footer() {
         <div className="grid gap-12 lg:grid-cols-12">
           {/* brand */}
           <div className="lg:col-span-4">
-            <Link href={href(locale, "/")} className="flex items-center gap-2.5">
-              <Logo className="h-8 w-8 text-foreground" />
-              <span className="font-display text-[26px] tracking-tight">Rosie Atelier</span>
+            <Link href={href(locale, "/")} className="inline-flex items-center">
+              <Logo className="text-[19px] text-foreground" />
             </Link>
             <p className="mt-5 max-w-sm text-body-sm text-foreground-secondary">{dict.footer.about}</p>
             <div className="mt-6 flex items-center gap-2">
@@ -81,7 +80,7 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col gap-4 border-t border-border pt-6 text-caption text-foreground-secondary md:flex-row md:items-center md:justify-between">
-          <p>© {locale === "fa" ? faNum(year) : year} Rosie Atelier · {dict.footer.rights}</p>
+          <p>© {locale === "fa" ? faNum(year) : year} Rosie Atelier · {dict.footer.founder} · {dict.footer.rights}</p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href={href(locale, "/legal/privacy")} className="hover:text-foreground">{dict.footer.privacy}</Link>
             <Link href={href(locale, "/legal/terms")} className="hover:text-foreground">{dict.footer.terms}</Link>

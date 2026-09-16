@@ -45,6 +45,11 @@ export function CreatorSignupForm({ options }: CreatorSignupFormProps) {
     const email = String(fd.get("email") || "");
     const password = String(fd.get("password") || "");
     const confirm = String(fd.get("confirm") || "");
+    const phone = String(fd.get("phone") || "");
+    const city = String(fd.get("city") || "");
+    const specialty = String(fd.get("type") || "");
+    const instagram = String(fd.get("instagram") || "");
+    const portfolioUrl = String(fd.get("portfolio") || "");
 
     if (password !== confirm) {
       setState("idle");
@@ -58,7 +63,13 @@ export function CreatorSignupForm({ options }: CreatorSignupFormProps) {
       return;
     }
 
-    const r = await signup(name, email, password, "artist");
+    const r = await signup(name, email, password, "artist", {
+      phone,
+      city,
+      specialty,
+      instagram,
+      portfolioUrl,
+    });
     if (!r.ok) {
       setState("error");
       const errorMap: Record<string, string> = {
@@ -82,8 +93,8 @@ export function CreatorSignupForm({ options }: CreatorSignupFormProps) {
       <SuccessState
         message={
           fa
-            ? "ثبت‌نام شما با موفقیت انجام شد! در حال انتقال به داشبورد…"
-            : "Registration successful! Redirecting to your dashboard…"
+            ? "ثبت‌نام شما با موفقیت انجام شد! درخواست شما در انتظار تأیید ادمین است. به‌زودی با شما تماس خواهیم گرفت."
+            : "Registration successful! Your application is pending admin review. We'll be in touch soon."
         }
       />
     );
@@ -91,11 +102,14 @@ export function CreatorSignupForm({ options }: CreatorSignupFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-      <Field label={fa ? "نام و نام خانوادگی" : "Full name"}>
+      <Field label={fa ? "نام و نام خانوادگی" : "Full name"} className="sm:col-span-2">
         <Input name="name" required autoComplete="name" />
       </Field>
       <Field label={fa ? "ایمیل" : "Email"}>
         <Input name="email" type="email" required dir="ltr" autoComplete="email" />
+      </Field>
+      <Field label={fa ? "شماره تماس" : "Phone"}>
+        <Input name="phone" type="tel" dir="ltr" autoComplete="tel" />
       </Field>
       <Field label={fa ? "نوع فعالیت" : "Specialty"}>
         <Select name="type">
@@ -104,8 +118,14 @@ export function CreatorSignupForm({ options }: CreatorSignupFormProps) {
           ))}
         </Select>
       </Field>
-      <Field label={fa ? "شماره تماس" : "Phone"}>
-        <Input name="phone" type="tel" dir="ltr" autoComplete="tel" />
+      <Field label={fa ? "شهر" : "City"}>
+        <Input name="city" autoComplete="address-level2" />
+      </Field>
+      <Field label={fa ? "آیدی اینستاگرام (اختیاری)" : "Instagram handle (optional)"} className="sm:col-span-2">
+        <Input name="instagram" dir="ltr" placeholder="@username" />
+      </Field>
+      <Field label={fa ? "لینک پورتفولیو (اختیاری)" : "Portfolio link (optional)"} className="sm:col-span-2">
+        <Input name="portfolio" type="url" dir="ltr" placeholder="https://..." />
       </Field>
       <Field label={fa ? "رمز عبور (حداقل ۶ کاراکتر)" : "Password (min 6 chars)"}>
         <Input name="password" type="password" required dir="ltr" minLength={6} autoComplete="new-password" />
@@ -116,12 +136,12 @@ export function CreatorSignupForm({ options }: CreatorSignupFormProps) {
 
       {state === "error" && errMsg && (
         <div className="sm:col-span-2">
-          <p className="text-sm text-error">{errMsg}</p>
+          <p className="rounded-lg border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">{errMsg}</p>
         </div>
       )}
 
       <div className="sm:col-span-2">
-        <Button type="submit" size="lg" disabled={state === "loading"}>
+        <Button type="submit" size="lg" disabled={state === "loading"} className="w-full sm:w-auto">
           {state === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
           {fa ? "ثبت‌نام به عنوان هنرمند" : "Register as an artist"}
         </Button>

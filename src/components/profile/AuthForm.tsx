@@ -25,6 +25,7 @@ const ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
   invalid_credentials: { fa: "ایمیل یا رمز عبور اشتباه است.", en: "Incorrect email or password." },
   email_taken: { fa: "این ایمیل قبلاً ثبت شده است.", en: "This email is already registered." },
   password_too_short: { fa: "رمز عبور باید حداقل ۶ کاراکتر باشد.", en: "Password must be at least 6 characters." },
+  password_mismatch: { fa: "رمز عبور و تکرار آن یکسان نیستند.", en: "Passwords do not match." },
   admin_not_configured: { fa: "حساب مدیر روی سرور پیکربندی نشده است.", en: "Admin account is not configured on the server." },
   too_many_attempts: { fa: "تعداد تلاش‌های زیاد. لطفاً کمی صبر کنید.", en: "Too many attempts. Please wait a moment." },
   network: { fa: "خطای شبکه. لطفاً دوباره تلاش کنید.", en: "Network error. Please try again." },
@@ -54,6 +55,14 @@ export function AuthForm({ mode, defaultRole, onSignupSuccess, prefill, autoSubm
     const email = String(fd.get("email"));
     const password = String(fd.get("password"));
 
+    if (mode === "signup") {
+      const confirm = String(fd.get("confirm") || "");
+      if (password !== confirm) {
+        setBusy(false);
+        return setErr(getError("password_mismatch"));
+      }
+    }
+
     if (mode === "login") {
       const r = await login(email, password);
       setBusy(false);
@@ -82,16 +91,7 @@ export function AuthForm({ mode, defaultRole, onSignupSuccess, prefill, autoSubm
           <Input name="name" required autoComplete="name" />
         </Field>
       )}
-      <Field
-        label={dict.common.email}
-        hint={
-          mode === "login"
-            ? fa
-              ? "مدیران با ایمیل مدیریت وارد شوند."
-              : "Admins: sign in with the admin email."
-            : undefined
-        }
-      >
+      <Field label={dict.common.email}>
         <Input
           name="email"
           type="email"
@@ -112,6 +112,19 @@ export function AuthForm({ mode, defaultRole, onSignupSuccess, prefill, autoSubm
           defaultValue={prefill?.password}
         />
       </Field>
+
+      {mode === "signup" && (
+        <Field label={fa ? "تکرار رمز عبور" : "Confirm password"}>
+          <Input
+            name="confirm"
+            type="password"
+            required
+            dir="ltr"
+            minLength={6}
+            autoComplete="new-password"
+          />
+        </Field>
+      )}
 
       {/* Role selector — only on signup */}
       {mode === "signup" && (
