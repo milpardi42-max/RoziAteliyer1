@@ -92,12 +92,24 @@ interface Envelope {
   data: Partial<SiteContent>;
 }
 
+const PREVIOUS_INSTRUCTORS: [string, string][] = [
+  ["نیلوفر راد", "Niloufar Rad"],
+  ["سارا مهر", "Sara Mehr"],
+  ["آرمان کیان", "Arman Kian"],
+  ["حسین تبریزی", "Hossein Tabrizi"],
+];
+
 function normalizeEventHosts(content: SiteContent): SiteContent {
   const academyHost = seedContent.artists.find((artist) => artist.id === "artist-razieh-khairipour");
-  const replacePreviousHost = (value: { fa: string; en: string }) => ({
-    fa: value.fa.replaceAll("نیلوفر راد", "راضیه خیری پور"),
-    en: value.en.replaceAll("Niloufar Rad", "Razieh Khairipour"),
-  });
+  const replacePreviousHost = (value: { fa: string; en: string }) => {
+    let fa = value.fa;
+    let en = value.en;
+    for (const [faName, enName] of PREVIOUS_INSTRUCTORS) {
+      fa = fa.replaceAll(faName, "راضیه خیری پور");
+      en = en.replaceAll(enName, "Razieh Khairipour");
+    }
+    return { fa, en };
+  };
 
   return {
     ...content,
@@ -105,18 +117,28 @@ function normalizeEventHosts(content: SiteContent): SiteContent {
       ? [...content.artists, academyHost]
       : content.artists,
     education: content.education.map((item) => {
-      if (item.type !== "workshop" && item.type !== "webinar") return item;
+      if (item.type !== "workshop" && item.type !== "webinar") {
+        return {
+          ...item,
+          authorId: "artist-razieh-khairipour",
+          title: replacePreviousHost(item.title),
+          excerpt: replacePreviousHost(item.excerpt),
+          body: replacePreviousHost(item.body),
+        };
+      }
       const liveEvent = item.liveEvent;
-      if (!liveEvent) return item;
-      const hasPreviousHost = liveEvent.hostName?.fa === "نیلوفر راد"
-        || liveEvent.hostName?.en === "Niloufar Rad";
-      const nextLiveEvent = hasPreviousHost || liveEvent.hostNameCustom === undefined
-        ? {
-            ...liveEvent,
-            hostName: { fa: "راضیه خیری پور", en: "Razieh Khairipour" },
-            hostNameCustom: true,
-          }
-        : liveEvent;
+      const hasPreviousHost = PREVIOUS_INSTRUCTORS.some(
+        ([faName, enName]) => liveEvent?.hostName?.fa === faName || liveEvent?.hostName?.en === enName
+      );
+      const nextLiveEvent = liveEvent
+        ? (hasPreviousHost || liveEvent.hostNameCustom === undefined
+            ? {
+                ...liveEvent,
+                hostName: { fa: "راضیه خیری پور", en: "Razieh Khairipour" },
+                hostNameCustom: true,
+              }
+            : liveEvent)
+        : undefined;
       return {
         ...item,
         authorId: "artist-razieh-khairipour",

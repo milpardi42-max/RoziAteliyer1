@@ -479,11 +479,10 @@ function EventRow({ item, onEnroll }: { item: EducationCardData; onEnroll: (item
 }
 
 /* ─── Instructor Card ────────────────────────────────────────── */
-function InstructorCard({ item }: { item: EducationCardData }) {
+function InstructorCard({ item, count }: { item: EducationCardData; count: number }) {
   const { locale, dict } = useLocale();
   const isFA = locale === "fa";
   if (!item.author) return null;
-  const count = 1; // placeholder
 
   return (
     <div className="flex items-center gap-4 rounded-xl border border-border bg-surface p-4">
@@ -494,7 +493,7 @@ function InstructorCard({ item }: { item: EducationCardData }) {
         <p className="font-semibold text-foreground truncate">{t(item.author.name, locale)}</p>
         <p className="text-body-sm text-foreground-secondary truncate">{t(item.author.profession, locale)}</p>
         <p className="text-caption text-muted mt-0.5">
-          {isFA ? `${faNum(count)} دوره` : `${count} course`}
+          {isFA ? `${faNum(count)} دوره` : `${count} ${count > 1 ? "courses" : "course"}`}
         </p>
       </div>
       <Link href={href(locale, `/artists/${item.author.slug}`)} className="shrink-0 text-caption text-accent hover:underline">
@@ -549,7 +548,9 @@ export function AcademyClient({ items, categories }: Props) {
   const totalInstructors = new Set(items.map((i) => i.authorId)).size;
   const n = (v: number) => (isFA ? faNum(v) : String(v));
 
-  // Featured instructors (unique authors from all items)
+  // Featured instructors (unique authors from all items) + per-instructor item counts
+  const instructorCounts = new Map<string, number>();
+  for (const item of items) instructorCounts.set(item.authorId, (instructorCounts.get(item.authorId) ?? 0) + 1);
   const uniqueInstructorItems = items.reduce<EducationCardData[]>((acc, item) => {
     if (item.author && !acc.some((x) => x.authorId === item.authorId)) acc.push(item);
     return acc;
@@ -734,7 +735,7 @@ export function AcademyClient({ items, categories }: Props) {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {uniqueInstructorItems.slice(0, 6).map((item) => (
-              <InstructorCard key={item.authorId} item={item} />
+              <InstructorCard key={item.authorId} item={item} count={instructorCounts.get(item.authorId) ?? 1} />
             ))}
           </div>
         </section>
