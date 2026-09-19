@@ -1053,6 +1053,37 @@ function ItemDrawer({
   const set = <K extends keyof EducationItem>(k: K, v: EducationItem[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  const isEventItem = form.type === "workshop" || form.type === "webinar";
+
+  /** Instructor picked from the dropdown — resets any previously typed custom name */
+  const handleAuthorChange = (authorId: string) => {
+    setForm((f) => ({
+      ...f,
+      authorId,
+      liveEvent: f.liveEvent
+        ? { ...f.liveEvent, hostName: undefined, hostNameCustom: false }
+        : f.liveEvent,
+    }));
+  };
+
+  /** Custom instructor/host name typed by admin (when the name is missing from the list) */
+  const handleCustomHostChange = (value: string) => {
+    const name = value.trim();
+    setForm((f) => {
+      const base =
+        f.liveEvent ??
+        (f.type === "workshop" ? { ...DEFAULT_WORKSHOP_LIVE } : { ...DEFAULT_WEBINAR_LIVE });
+      return {
+        ...f,
+        liveEvent: {
+          ...base,
+          hostName: name ? { fa: name, en: name } : undefined,
+          hostNameCustom: Boolean(name),
+        },
+      };
+    });
+  };
+
   const handleTypeChange = (newType: EducationType) => {
     setForm((f) => ({
       ...f,
@@ -1212,18 +1243,34 @@ function ItemDrawer({
 
           {/* Author + Category */}
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label={form.type === "webinar" ? "مدرس / میزبان وبینار" : form.type === "workshop" ? "مدرس / مربی ورکشاپ" : "مدرس / استاد دوره"}>
-              <Select value={form.authorId} onChange={(e) => set("authorId", e.target.value)}>
-                <option value="">انتخاب کنید…</option>
-                {(form.type === "workshop" || form.type === "webinar") && (
+            <Field
+              label={form.type === "webinar" ? "مدرس / میزبان وبینار" : form.type === "workshop" ? "مدرس / مربی ورکشاپ" : "مدرس / استاد دوره"}
+              hint={isEventItem ? "اگر نام مدرس/میزبان در فهرست نیست، می‌توانید نام سفارشی را در فیلد کنار منو تایپ کنید." : undefined}
+            >
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Select
+                  value={form.authorId}
+                  onChange={(e) => handleAuthorChange(e.target.value)}
+                  className={isEventItem ? "sm:w-[45%] shrink-0" : undefined}
+                >
+                  <option value="">انتخاب کنید…</option>
                   <option value="artist-razieh-khairipour">راضیه خیری پور</option>
+                  {form.type === "course" && artists
+                    .filter((a) => a.id !== "artist-razieh-khairipour")
+                    .map((a) => (
+                      <option key={a.id} value={a.id}>{t(a.name, "fa")}</option>
+                    ))}
+                </Select>
+                {isEventItem && (
+                  <Input
+                    dir="rtl"
+                    value={form.liveEvent?.hostName?.fa ?? ""}
+                    placeholder="اگر نام مدرس در فهرست نیست، اینجا تایپ کنید…"
+                    className="sm:flex-1"
+                    onChange={(e) => handleCustomHostChange(e.target.value)}
+                  />
                 )}
-                {form.type === "course" && artists
-                  .filter((a) => a.id !== "artist-razieh-khairipour")
-                  .map((a) => (
-                    <option key={a.id} value={a.id}>{t(a.name, "fa")}</option>
-                  ))}
-              </Select>
+              </div>
             </Field>
             <Field label="دسته‌بندی">
               <Select value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>

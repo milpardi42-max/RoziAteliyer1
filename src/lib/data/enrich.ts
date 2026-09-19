@@ -21,7 +21,7 @@ const ACADEMY_HOST: Artist = {
   slug: "razieh-khairipour",
   name: { fa: "راضیه خیری پور", en: "Razieh Khairipour" },
   profession: { fa: "مدرس و میزبان آکادمی", en: "Academy instructor and host" },
-  bio: { fa: "مدرس و میزبان ورکشاپ‌ها و وبینارهای آکادمی رزی.", en: "Instructor and host of Rosie Academy workshops and webinars." },
+  bio: { fa: "مدرس دوره‌ها و میزبان ورکشاپ‌ها و وبینارهای آکادمی رزی.", en: "Instructor and host of Rosie Academy courses, workshops and webinars." },
   avatar: "/images/education/e01.jpg",
   cover: "/images/education/e01.jpg",
   location: { fa: "تهران", en: "Tehran" },
